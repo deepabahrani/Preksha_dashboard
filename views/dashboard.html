@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Preksha Meditation Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght=500;600;700&family=Manrope:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/public/css/style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      /* Layout optimization layout grid structure to ensure metrics are cleanly displayed in a single unified row layout */
+      .hero-kpis-row {
+        display: grid !important;
+        grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+        gap: 12px !important;
+        width: 100% !important;
+        grid-column: span 3 !important;
+        margin-top: 20px;
+      }
+      
+      /* Increase hero logo sizing and adjust presentation */
+      .hero-symbol img {
+        width: 240px !important; /* Increased from 120px to make it visibly larger */
+        max-width: 100% !important;
+        height: auto !important;
+      }
+
+      /* Adjust typography layout to prevent line cramping */
+      .hero-copy h3 {
+        max-width: 100% !important; /* Overrides style.css 10ch max-width restriction causing early wraps */
+        line-height: 1.2 !important;
+        margin-bottom: 12px !important;
+      }
+
+      @media (max-width: 1280px) {
+        .hero-kpis-row {
+          grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        }
+      }
+      @media (max-width: 640px) {
+        .hero-kpis-row {
+          grid-template-columns: 1fr !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <img src="/public/assets/preksha-logo.png" alt="Preksha Meditation logo" class="brand-logo" />
+          <div>
+            <h1>Preksha Meditation</h1>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main-panel" id="dashboard">
+        <header class="top-header">
+          <div class="header-identity">
+            <img src="/public/assets/preksha-logo.png" alt="Preksha Meditation logo" class="header-logo" />
+            <div>
+              <h2>Preksha Meditation</h2>
+            </div>
+          </div>
+
+          <div class="header-tools">
+            <label class="search-field">
+              <span>Search</span>
+              <input id="globalSearch" type="search" placeholder="Search name, city, profession" />
+            </label>
+            <div class="header-profile">
+              <img src="/public/assets/preksha-logo.png" alt="Preksha profile mark" class="profile-logo" />
+              <div>
+                <strong>Preksha Team</strong>
+                <span id="dataSourceText">Loading data...</span>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <nav class="top-nav">
+          <a href="#dashboard" class="nav-link active">Dashboard</a>
+          <a href="#usersTable" class="nav-link">Users</a>
+          <a href="#analytics" class="nav-link">Analytics</a>
+          <a href="#reports" class="nav-link">Reports</a>
+        </nav>
+
+        <section class="hero-section">
+          <div class="hero-copy">
+            <p class="hero-kicker">PREKSHA MEDITATION COMMUNITY</p>
+            <h3>Transforming Life <br/>Through Awareness</h3>
+            <p class="hero-text">
+              A unified portal for practitioners, first-time attendees, volunteers, and program preferences
+              across the Preksha Meditation community.
+            </p>
+          </div>
+          <div class="hero-symbol">
+            <img src="/public/assets/preksha-logo.png" alt="Preksha lotus emblem" />
+          </div>
+          
+          <div class="hero-kpis-row">
+            <article class="hero-kpi">
+              <span>Total Registrations</span>
+              <strong id="heroTotalRegistrations">0</strong>
+            </article>
+            <article class="hero-kpi">
+              <span>First Time Attendees</span>
+              <strong id="heroFirstTimeAttendees">0</strong>
+            </article>
+            <article class="hero-kpi">
+              <span>Active Practitioners</span>
+              <strong id="heroActivePractitioners">0</strong>
+            </article>
+            <article class="hero-kpi">
+              <span>Want Restart</span>
+              <strong id="heroWantRestart">0</strong>
+            </article>
+            <article class="hero-kpi">
+              <span>Volunteer Interested</span>
+              <strong id="heroVolunteerInterested">0</strong>
+            </article>
+            <article class="hero-kpi">
+              <span>Need Guidance</span>
+              <strong id="heroNeedGuidance">0</strong>
+            </article>
+          </div>
+        </section>
+
+        <section class="filters-panel">
+          <div class="section-head">
+            <div>
+              <p class="section-kicker">Filters</p>
+              <h3>Refine community records</h3>
+            </div>
+          </div>
+          <form id="filtersForm" class="filters-grid">
+            <select id="filterGender" name="gender">
+              <option value="all">All Genders</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+            </select>
+            <select id="filterCity" name="city">
+              <option value="all">All Cities</option>
+            </select>
+            <select id="filterState" name="state">
+              <option value="all">All States</option>
+            </select>
+            <select id="filterPracticeStatus" name="practiceStatus">
+              <option value="all">All Practice Status</option>
+              <option value="regularly">Regularly</option>
+              <option value="sometimes">Sometimes</option>
+              <option value="no">No</option>
+              <option value="restart">Want Restart</option>
+            </select>
+            <select id="filterVolunteer" name="volunteer">
+              <option value="all">Volunteer Interest</option>
+              <option value="yes">Yes</option>
+              <option value="no">No</option>
+            </select>
+            <select id="filterGuidance" name="guidance">
+              <option value="all">Guidance Status</option>
+              <option value="yes">Yes</option>
+              <option value="no">No</option>
+            </select>
+          </form>
+        </section>
+
+        <section class="table-panel" id="usersTable">
+          <div class="section-head table-head">
+            <div>
+              <p class="section-kicker">Practitioner Directory</p>
+              <h3>All users from CSV</h3>
+            </div>
+            <div class="table-actions">
+              <select id="sortSelect">
+                <option value="fullName-asc">Sort by Name A-Z</option>
+                <option value="fullName-desc">Sort by Name Z-A</option>
+                <option value="city-asc">Sort by City A-Z</option>
+                <option value="state-asc">Sort by State A-Z</option>
+                <option value="profession-asc">Sort by Profession A-Z</option>
+              </select>
+              <button id="exportCsv" type="button" class="button-secondary">Export CSV</button>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Photo</th>
+                  <th>Full Name</th>
+                  <th>Gender</th>
+                  <th>City</th>
+                  <th>State</th>
+                  <th>Profession</th>
+                  <th>Practice Status</th>
+                  <th>Volunteer</th>
+                  <th>Guidance</th>
+                  <th>Profile</th>
+                </tr>
+              </thead>
+              <tbody id="usersTableBody"></tbody>
+            </table>
+          </div>
+
+          <div class="table-footer">
+            <span id="tableSummary">0 records</span>
+            <div class="pagination">
+              <button id="prevPage" type="button" class="button-secondary">Previous</button>
+              <span id="pageIndicator">Page 1</span>
+              <button id="nextPage" type="button" class="button-secondary">Next</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="analytics-panel" id="analytics">
+          <div class="section-head analytics-head">
+            <div>
+              <p class="section-kicker">Analytics</p>
+              <h3>Dynamic meditation insights</h3>
+            </div>
+            <button id="downloadReport" type="button" class="button-primary">Download Analytics Report</button>
+          </div>
+
+          <div class="charts-grid">
+            <article class="chart-card">
+              <h4>First Time vs Existing Practitioners</h4>
+              <canvas id="practitionerSplitChart"></canvas>
+            </article>
+            <article class="chart-card">
+              <h4>Practice Status</h4>
+              <canvas id="practiceStatusChart"></canvas>
+            </article>
+            <article class="chart-card">
+              <h4>Volunteer / Facilitator / Trainer Interest</h4>
+              <canvas id="interestChart"></canvas>
+            </article>
+            <article class="chart-card">
+              <h4>City Participation</h4>
+              <canvas id="cityChart"></canvas>
+            </article>
+            <article class="chart-card" id="reports">
+              <h4>State Participation</h4>
+              <canvas id="stateChart"></canvas>
+            </article>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div id="profileModal" class="modal hidden">
+      <div class="modal-overlay" data-close-modal="true"></div>
+      <div class="modal-card">
+        <button id="closeModal" class="modal-close" type="button" aria-label="Close profile">&times;</button>
+        <div id="modalContent"></div>
+      </div>
+    </div>
+
+    <script>
+      let chartInstances = {};
+      let allUserData = [];
+      let currentPage = 1;
+      const recordsPerPage = 10;
+
+      // Master trigger initialization routine hook on lifecycle DOM construction completion
+      window.addEventListener("DOMContentLoaded", () => {
+        initializeFilterDropdowns();
+        fetchDashboardDataset();
+
+        // Register action control event listeners
+        document.getElementById("filtersForm").addEventListener("change", () => { currentPage = 1; fetchDashboardDataset(); });
+        document.getElementById("sortSelect").addEventListener("change", () => { currentPage = 1; fetchDashboardDataset(); });
+        document.getElementById("globalSearch").addEventListener("input", debounce(() => { currentPage = 1; fetchDashboardDataset(); }, 300));
+        
+        document.getElementById("prevPage").addEventListener("click", () => { if (currentPage > 1) { currentPage--; renderTablePage(); } });
+        document.getElementById("nextPage").addEventListener("click", () => { if (currentPage * recordsPerPage < allUserData.length) { currentPage++; renderTablePage(); } });
+        
+        document.getElementById("exportCsv").addEventListener("click", exportToCsvFile);
+        document.getElementById("closeModal").addEventListener("click", () => document.getElementById("profileModal").classList.add("hidden"));
+        document.querySelector(".modal-overlay").addEventListener("click", () => document.getElementById("profileModal").classList.add("hidden"));
+      });
+
+      function getFilterParams() {
+        const form = document.getElementById("filtersForm");
+        const formData = new FormData(form);
+        const params = new URLSearchParams();
+        
+        for (const [key, val] of formData.entries()) {
+          if (val !== "all") params.append(key, val);
+        }
+        
+        const searchVal = document.getElementById("globalSearch").value.trim();
+        if (searchVal) params.append("search", searchVal);
+        
+        const sortVal = document.getElementById("sortSelect").value;
+        if (sortVal) params.append("sort", sortVal);
+
+        return params.toString();
+      }
+
+      async function initializeFilterDropdowns() {
+        try {
+          const [citiesRes, statesRes] = await Promise.all([fetch('/api/cities'), fetch('/api/states')]);
+          const cities = await citiesRes.json();
+          const states = await statesRes.json();
+
+          const citySel = document.getElementById("filterCity");
+          cities.forEach(c => citySel.insertAdjacentHTML('beforeend', `<option value="${c}">${c}</option>`));
+
+          const stateSel = document.getElementById("filterState");
+          states.forEach(s => stateSel.insertAdjacentHTML('beforeend', `<option value="${s}">${s}</option>`));
+        } catch (err) {
+          console.error("Failed to populate drop-down configurations", err);
+        }
+      }
+
+      async function fetchDashboardDataset() {
+        try {
+          const queryString = getFilterParams();
+          
+          // Request live structural components directly in parallel stream configurations
+          const [usersRes, statsRes, analyticsRes] = await Promise.all([
+            fetch(`/api/users?${queryString}`),
+            fetch(`/api/stats?${queryString}`),
+            fetch(`/api/analytics?${queryString}`)
+          ]);
+
+          const usersData = await usersRes.json();
+          const statsData = await statsRes.json();
+          const analyticsData = await analyticsRes.json();
+
+          allUserData = usersData.rows || [];
+          
+          // Inject live engine metrics and source details natively extracted from server.js
+          if (usersData.source) {
+            document.getElementById("dataSourceText").innerText = `Source: ${usersData.source}`;
+          }
+
+          updateMetricCounters(statsData.stats);
+          renderTablePage();
+          renderAnalyticsVisualizationCharts(analyticsData.analytics);
+        } catch (err) {
+          console.error("Data ingestion pipeline synchronization breakdown error:", err);
+        }
+      }
+
+      function updateMetricCounters(stats) {
+        if (!stats) return;
+        document.getElementById("heroTotalRegistrations").innerText = stats.totalRegistrations ?? 0;
+        document.getElementById("heroFirstTimeAttendees").innerText = stats.firstTimeAttendees ?? 0;
+        document.getElementById("heroActivePractitioners").innerText = stats.activePractitioners ?? 0;
+        document.getElementById("heroWantRestart").innerText = stats.wantToRestart ?? 0;
+        document.getElementById("heroVolunteerInterested").innerText = stats.volunteerInterested ?? 0;
+        document.getElementById("heroNeedGuidance").innerText = stats.needGuidance ?? 0;
+      }
+
+      function renderTablePage() {
+        const tbody = document.getElementById("usersTableBody");
+        tbody.innerHTML = "";
+
+        document.getElementById("tableSummary").innerText = `${allUserData.length} records found`;
+        document.getElementById("pageIndicator").innerText = `Page ${currentPage}`;
+
+        if (allUserData.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; padding:30px; color:var(--muted);">No matching community database profiles located.</td></tr>`;
+          return;
+        }
+
+        const startIndex = (currentPage - 1) * recordsPerPage;
+        const endIndex = Math.min(startIndex + recordsPerPage, allUserData.length);
+        const paginatedSlice = allUserData.slice(startIndex, endIndex);
+
+        paginatedSlice.forEach(user => {
+          const photoMarkup = user.profilePhoto 
+            ? `<img src="${user.profilePhoto}" alt="Avatar" class="table-avatar"/>`
+            : `<div class="table-avatar">${user.initials}</div>`;
+
+          const rowHtml = `
+            <tr class="fade-in">
+              <td>${photoMarkup}</td>
+              <td><strong>${user.fullName}</strong></td>
+              <td>${user.gender || '-'}</td>
+              <td>${user.city || '-'}</td>
+              <td>${user.state || '-'}</td>
+              <td>${user.profession || '-'}</td>
+              <td><span class="status-badge">${user.meditationStatus}</span></td>
+              <td><span class="status-badge ${user.becomeVolunteer ? 'yes' : 'no'}">${user.becomeVolunteer ? 'Yes' : 'No'}</span></td>
+              <td><span class="status-badge ${user.needGuidance ? 'yes' : 'no'}">${user.needGuidance ? 'Yes' : 'No'}</span></td>
+              <td><button class="profile-button" onclick="launchUserProfileModal('${user.id}')">View</button></td>
+            </tr>
+          `;
+          tbody.insertAdjacentHTML('beforeend', rowHtml);
+        });
+      }
+
+      async function launchUserProfileModal(userId) {
+        try {
+          const res = await fetch(`/api/users/${userId}`);
+          if (!res.ok) return;
+          const user = await res.json();
+
+          const avatarMarkup = user.profilePhoto 
+            ? `<img src="${user.profilePhoto}" alt="Avatar"/>` 
+            : `<span>${user.initials}</span>`;
+
+          let interestsListMarkup = user.interests.map(i => `
+            <div class="detail-card">
+              <span class="chip-label">${i.label}</span>
+              <strong style="color: ${i.active ? '#3d6b3d' : 'var(--muted)'}">${i.active ? 'Yes' : 'No'}</strong>
+            </div>
+          `).join('');
+
+          let prefListMarkup = user.programPreferences.map(p => `
+            <div class="detail-card">
+              <span class="chip-label">${p.label} Preference</span>
+              <strong style="color: ${p.active ? 'var(--maroon)' : 'var(--muted)'}">${p.active ? 'Active' : 'Not Selected'}</strong>
+            </div>
+          `).join('');
+
+          document.getElementById("modalContent").innerHTML = `
+            <div class="featured-header" style="margin-bottom: 20px;">
+              <div class="modal-avatar">${avatarMarkup}</div>
+              <div>
+                <p class="brand-kicker">${user.seekerType}</p>
+                replace text context templates
+                <h3>${user.fullName}</h3>
+                <p style="margin:4px 0 0; color:var(--muted);">${user.profession || 'Profession Unspecified'} | ${user.city}, ${user.state}</p>
+              </div>
+            </div>
+            <div class="modal-grid">
+              <div class="detail-card"><span>Email Address</span><strong>${user.email || '-'}</strong></div>
+              <div class="detail-card"><span>Mobile Number</span><strong>${user.mobile || '-'}</strong></div>
+              <div class="detail-card"><span>Gender</span><strong>${user.gender || '-'}</strong></div>
+              <div class="detail-card"><span>Age / Date of Birth</span><strong>${user.age ? user.age + ' Years' : '-'} (${user.dateOfBirth || '-'})</strong></div>
+              <div class="detail-card"><span>Current Practice Level</span><strong>${user.meditationStatus}</strong></div>
+              <div class="detail-card"><span>Languages Known</span><strong>${user.languages || '-'}</strong></div>
+            </div>
+            <div class="modal-section">
+              <h4>Community Engagement Interests</h4>
+              <div class="modal-grid">${interestsListMarkup}</div>
+            </div>
+            <div class="modal-section">
+              <h4>Program Delivery Platform Preferences</h4>
+              <div class="modal-grid">${prefListMarkup}</div>
+            </div>
+            ${user.supportMessage ? `
+              <div class="modal-section">
+                <h4>Message / Support Notes</h4>
+                <div class="support-card">${user.supportMessage}</div>
+              </div>
+            ` : ''}
+          `;
+          document.getElementById("profileModal").classList.remove("hidden");
+        } catch (err) {
+          console.error("Failed to parse individual seeker layout metadata template context mapping:", err);
+        }
+      }
+
+      function safeDestroyChart(chartKey) {
+        if (chartInstances[chartKey]) {
+          chartInstances[chartKey].destroy();
+          delete chartInstances[chartKey];
+        }
+      }
+
+      function renderAnalyticsVisualizationCharts(analytics) {
+        if (!analytics) return;
+
+        // Chart 1: First Time vs Existing Practitioners
+        safeDestroyChart("practitionerSplit");
+        chartInstances["practitionerSplit"] = new Chart(document.getElementById("practitionerSplitChart"), {
+          type: 'doughnut',
+          data: {
+            labels: ['First Time Attendees', 'Existing Practitioners'],
+            datasets: [{
+              data: [analytics.practitionerSplit?.firstTime ?? 0, analytics.practitionerSplit?.existing ?? 0],
+              backgroundColor: ['#d4a14a', '#8f2520']
+            }]
+          },
+          options: { responsive: true, maintainAspectRatio: false }
+        });
+
+        // Chart 2: Practice Status Breakdown
+        safeDestroyChart("practiceStatus");
+        const pStatus = analytics.practiceStatus || {};
+        chartInstances["practiceStatus"] = new Chart(document.getElementById("practiceStatusChart"), {
+          type: 'bar',
+          data: {
+            labels: ['Regularly', 'Sometimes', 'Want Restart', 'No', 'Unknown'],
+            datasets: [{
+              label: 'Practitioners Count',
+              data: [pStatus.regularly ?? 0, pStatus.sometimes ?? 0, pStatus.restart ?? 0, pStatus.no ?? 0, pStatus.unknown ?? 0],
+              backgroundColor: ['#5e1817', '#8f2520', '#d4a14a', '#766255', '#e6d5b7']
+            }]
+          },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+        });
+
+        // Chart 3: Volunteer Interest Distributions Matrix Split Mapping
+        safeDestroyChart("interestSplit");
+        const iSplit = analytics.interestSplit || {};
+        chartInstances["interestSplit"] = new Chart(document.getElementById("interestChart"), {
+          type: 'pie',
+          data: {
+            labels: ['Volunteers', 'Facilitators', 'Trainers'],
+            datasets: [{
+              data: [iSplit.volunteer ?? 0, iSplit.facilitator ?? 0, iSplit.trainer ?? 0],
+              backgroundColor: ['#3d6b3d', '#c8a46b', '#8f2520']
+            }]
+          },
+          options: { responsive: true, maintainAspectRatio: false }
+        });
+
+        // Chart 4: City Participation Metrics Array Layout
+        safeDestroyChart("cityParticipation");
+        const citiesData = analytics.cityParticipation || [];
+        chartInstances["cityParticipation"] = new Chart(document.getElementById("cityChart"), {
+          type: 'bar',
+          data: {
+            labels: citiesData.map(c => c.label),
+            datasets: [{
+              label: 'Seekers Count',
+              data: citiesData.map(c => c.count),
+              backgroundColor: '#d4a14a'
+            }]
+          },
+          options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false } } }
+        });
+
+        // Chart 5: State Participation Polar Matrix Mapping Area
+        safeDestroyChart("stateParticipation");
+        const statesData = analytics.stateParticipation || [];
+        chartInstances["stateParticipation"] = new Chart(document.getElementById("stateChart"), {
+          type: 'polarArea',
+          data: {
+            labels: statesData.map(s => s.label),
+            datasets: [{
+              data: statesData.map(s => s.count),
+              backgroundColor: ['rgba(143,37,32,0.85)', 'rgba(212,161,74,0.85)', 'rgba(94,24,23,0.85)', 'rgba(200,164,107,0.85)', 'rgba(118,98,85,0.85)']
+            }]
+          },
+          options: { responsive: true, maintainAspectRatio: false }
+        });
+      }
+
+      function exportToCsvFile() {
+        if (!allUserData.length) return alert("No available metadata rows to trigger file compression pipeline exports.");
+        
+        const columnHeaders = ["Full Name", "Gender", "City", "State", "Profession", "Practice Status", "Volunteer Interest", "Guidance Status"];
+        const outputRows = [columnHeaders.join(",")];
+
+        allUserData.forEach(u => {
+          const serializedRow = [
+            `"${u.fullName.replace(/"/g, '""')}"`,
+            `"${(u.gender || '').replace(/"/g, '""')}"`,
+            `"${(u.city || '').replace(/"/g, '""')}"`,
+            `"${(u.state || '').replace(/"/g, '""')}"`,
+            `"${(u.profession || '').replace(/"/g, '""')}"`,
+            `"${u.meditationStatus}"`,
+            `"${u.becomeVolunteer ? 'Yes' : 'No'}"`,
+            `"${u.needGuidance ? 'Yes' : 'No'}"`
+          ];
+          outputRows.push(serializedRow.join(","));
+        });
+
+        const csvBlob = new Blob([outputRows.join("\n")], { type: 'text/csv;charset=utf-8;' });
+        const downloadLink = document.createElement("a");
+        downloadLink.href = URL.createObjectURL(csvBlob);
+        downloadLink.setAttribute("download", `Preksha_Community_Report_${new Date().toISOString().slice(0,10)}.csv`);
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+      }
+
+      function debounce(fn, executionDelay) {
+        let activeTimeoutId;
+        return function (...args) {
+          clearTimeout(activeTimeoutId);
+          activeTimeoutId = setTimeout(() => fn.apply(this, args), executionDelay);
+        };
+      }
+    </script>
+  </body>
+</html>
