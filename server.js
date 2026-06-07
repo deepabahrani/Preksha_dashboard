@@ -7,7 +7,7 @@ const csvMapping = require("./config/csvMapping");
 const app = express();
 const PORT = process.env.PORT || 3000;
 const PUBLIC_DIR = path.join(__dirname, "public");
-const DASHBOARD_FILE = path.join(__dirname, "views", "index.html");
+const DASHBOARD_FILE = path.join(__dirname, "index.html");
 const DATA_FILE_CANDIDATES = [
   path.join(__dirname, "data.csv"),
   path.join(__dirname, "data", "data.csv"),
