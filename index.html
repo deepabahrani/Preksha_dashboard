@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -17,17 +17,24 @@
     <div class="app-shell-modern">
       <header class="workspace-header">
         <div class="nav-branding-group">
-          <img src="/public/assets/preksha-logo.png" alt="Preksha Meditation logo" class="navbar-primary-logo" />
+          <img
+            src="/public/assets/preksha-logo.png"
+            alt="Preksha Meditation logo"
+            class="navbar-primary-logo"
+          />
           <nav class="top-nav-modern">
             <a href="#dashboard" class="nav-link-modern active">Dashboard</a>
             <a href="#usersTable" class="nav-link-modern">Users</a>
             <a href="#analytics" class="nav-link-modern">Analytics</a>
-            <a href="#reports" class="nav-link-modern">Reports</a>
           </nav>
         </div>
 
         <div class="search-extended-wrapper">
-          <input id="globalSearch" type="search" placeholder="Search practitioners by name, city, state, or profession..." />
+          <input
+            id="globalSearch"
+            type="search"
+            placeholder="Search practitioners by name, city, email..."
+          />
         </div>
       </header>
 
@@ -36,17 +43,21 @@
           <div class="hero-main-split">
             <div class="hero-copy">
               <p class="hero-kicker">PREKSHA MEDITATION COMMUNITY</p>
-              <h3>Transforming Life <br/>Through Awareness</h3>
+              <h3>Transforming Life <br />Through Awareness</h3>
               <p class="hero-text">
-                A unified portal for practitioners, first-time attendees, volunteers, and program preferences
-                across the Preksha Meditation community.
+                A unified portal for practitioners, first-time attendees,
+                volunteers, and program preferences across the Preksha
+                Meditation community.
               </p>
             </div>
             <div class="hero-symbol">
-              <img src="/public/assets/preksha-logo.png" alt="Preksha lotus emblem" />
+              <img
+                src="/public/assets/preksha-logo.png"
+                alt="Preksha lotus emblem"
+              />
             </div>
           </div>
-          
+
           <div class="hero-kpis-row">
             <article class="hero-kpi">
               <span>Total Registrations</span>
@@ -88,19 +99,37 @@
               <option value="Male">Male</option>
               <option value="Female">Female</option>
             </select>
+
             <select id="filterCity" name="city">
               <option value="all">All Cities</option>
             </select>
-            <select id="filterState" name="state">
-              <option value="all">All States</option>
+            <select id="filterCountry" name="country">
+              <option value="all">All Countries</option>
             </select>
-            <select id="filterPracticeStatus" name="practiceStatus">
-              <option value="all">All Practice Status</option>
-              <option value="regularly">Regularly</option>
-              <option value="sometimes">Sometimes</option>
-              <option value="no">No</option>
-              <option value="restart">Want Restart</option>
+
+            <select id="filterCampsAttended" name="campsAttended">
+              <option value="all">Number of camps attended ?</option>
+              <!-- <option value="0">0 Camps</option> -->
+              <option value="1">1 Camp</option>
+              <option value="2">2 Camps</option>
+              <option value="3">3 Camps</option>
+              <option value="4">4+ Camps</option>
             </select>
+
+            <select id="filterAppPractice" name="appPractice">
+              <option value="all">Practising via Preksha application ?</option>
+              <option value="Yes">Yes</option>
+              <option value="No">No</option>
+            </select>
+
+            <input
+              id="filterCompletedPrograms"
+              name="completedPrograms"
+              type="text"
+              class="filter-text-input"
+              placeholder="Which programs have you completed?"
+            />
+
             <select id="filterVolunteer" name="volunteer">
               <option value="all">Volunteer Interest</option>
               <option value="yes">Yes</option>
@@ -118,17 +147,19 @@
           <div class="section-head table-head">
             <div>
               <p class="section-kicker">Practitioner Directory</p>
-              <h3>All users from CSV</h3>
+              <h3>All community users</h3>
             </div>
             <div class="table-actions">
               <select id="sortSelect">
                 <option value="fullName-asc">Sort by Name A-Z</option>
                 <option value="fullName-desc">Sort by Name Z-A</option>
-                <option value="city-asc">Sort by City A-Z</option>
-                <option value="state-asc">Sort by State A-Z</option>
-                <option value="profession-asc">Sort by Profession A-Z</option>
+                <option value="registrationDate-desc">
+                  Sort by Submit Time
+                </option>
               </select>
-              <button id="exportCsv" type="button" class="button-secondary">Export CSV</button>
+              <button id="exportCsv" type="button" class="button-secondary">
+                Export CSV
+              </button>
             </div>
           </div>
 
@@ -138,12 +169,12 @@
                 <tr>
                   <th>Photo</th>
                   <th>Full Name</th>
-                  <th>Gender</th>
+                  <th>Email</th>
+                  <th>Phone/Mobile</th>
+                  <th>Country</th>
                   <th>City</th>
-                  <th>State</th>
-                  <th>Profession</th>
-                  <th>Practice Status</th>
-                  <th>Volunteer</th>
+                  <th>Language</th>
+                  <th>App Practice</th>
                   <th>Guidance</th>
                   <th>Profile</th>
                 </tr>
@@ -155,9 +186,13 @@
           <div class="table-footer">
             <span id="tableSummary">0 records</span>
             <div class="pagination">
-              <button id="prevPage" type="button" class="button-secondary">Previous</button>
+              <button id="prevPage" type="button" class="button-secondary">
+                Previous
+              </button>
               <span id="pageIndicator">Page 1</span>
-              <button id="nextPage" type="button" class="button-secondary">Next</button>
+              <button id="nextPage" type="button" class="button-secondary">
+                Next
+              </button>
             </div>
           </div>
         </section>
@@ -168,7 +203,9 @@
               <p class="section-kicker">Analytics</p>
               <h3>Dynamic meditation insights</h3>
             </div>
-            <button id="downloadReport" type="button" class="button-primary">Download Analytics Report</button>
+            <button id="downloadReport" type="button" class="button-primary">
+              Download Analytics Report
+            </button>
           </div>
 
           <div class="charts-grid">
@@ -200,7 +237,14 @@
     <div id="profileModal" class="modal hidden">
       <div class="modal-overlay" data-close-modal="true"></div>
       <div class="modal-card">
-        <button id="closeModal" class="modal-close" type="button" aria-label="Close profile">&times;</button>
+        <button
+          id="closeModal"
+          class="modal-close"
+          type="button"
+          aria-label="Close profile"
+        >
+          &times;
+        </button>
         <div id="modalContent"></div>
       </div>
     </div>

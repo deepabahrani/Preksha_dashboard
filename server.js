@@ -5,7 +5,7 @@ const csv = require("csv-parser");
 const csvMapping = require("./config/csvMapping");
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3003;
 const PUBLIC_DIR = path.join(__dirname, "public");
 const DASHBOARD_FILE = path.join(__dirname, "index.html");
 const DATA_FILE_CANDIDATES = [
@@ -37,15 +37,9 @@ function normalizeText(value) {
 
 function normalizeBoolean(value) {
   const normalized = normalizeText(value).toLowerCase();
-  if (!normalized) {
-    return null;
-  }
-  if (TRUE_VALUES.has(normalized)) {
-    return true;
-  }
-  if (FALSE_VALUES.has(normalized)) {
-    return false;
-  }
+  if (!normalized) return null;
+  if (TRUE_VALUES.has(normalized)) return true;
+  if (FALSE_VALUES.has(normalized)) return false;
   return null;
 }
 
@@ -59,9 +53,7 @@ function matchColumn(row, aliases = []) {
 function getMappedValue(row, key) {
   const aliases = csvMapping[key] || [];
   const matchedAlias = matchColumn(row, aliases);
-  if (!matchedAlias) {
-    return "";
-  }
+  if (!matchedAlias) return "";
   const actualKey = Object.keys(row).find(
     (column) => column.trim().toLowerCase() === matchedAlias.trim().toLowerCase()
   );
@@ -70,13 +62,9 @@ function getMappedValue(row, key) {
 
 function calculateAge(dateOfBirth) {
   const normalizedDob = normalizeText(dateOfBirth);
-  if (!normalizedDob) {
-    return null;
-  }
+  if (!normalizedDob) return null;
   const dob = new Date(normalizedDob);
-  if (Number.isNaN(dob.getTime())) {
-    return null;
-  }
+  if (Number.isNaN(dob.getTime())) return null;
   const today = new Date();
   let age = today.getFullYear() - dob.getFullYear();
   const monthDiff = today.getMonth() - dob.getMonth();
@@ -84,26 +72,6 @@ function calculateAge(dateOfBirth) {
     age -= 1;
   }
   return age;
-}
-
-function normalizePracticeKey(value) {
-  const normalized = normalizeText(value).toLowerCase();
-  if (!normalized) {
-    return "unknown";
-  }
-  if (normalized.includes("regular")) {
-    return "regularly";
-  }
-  if (normalized.includes("sometime")) {
-    return "sometimes";
-  }
-  if (normalized.includes("restart")) {
-    return "restart";
-  }
-  if (normalized === "no" || normalized.includes("not")) {
-    return "no";
-  }
-  return "unknown";
 }
 
 function practiceLabel(key) {
@@ -118,45 +86,45 @@ function practiceLabel(key) {
 
 function resolveProfilePhoto(rawPhoto) {
   const fileName = normalizeText(rawPhoto);
-  if (!fileName) {
-    return "";
-  }
+  if (!fileName) return "";
   const candidates = [
     path.join(PUBLIC_DIR, "assets", fileName),
     path.join(__dirname, fileName),
     path.join(__dirname, "assets", fileName)
   ];
   const existing = candidates.find((candidate) => fs.existsSync(candidate));
-  if (!existing) {
-    return "";
-  }
+  if (!existing) return "";
   if (existing.startsWith(path.join(PUBLIC_DIR, "assets"))) {
     return `/public/assets/${path.basename(existing)}`;
   }
   return "";
 }
 
-function createInitials(firstName, lastName) {
-  return `${normalizeText(firstName).charAt(0) || "P"}${normalizeText(lastName).charAt(0) || ""}`.toUpperCase();
-}
-
 function normalizeUser(row, index) {
-  const firstName = getMappedValue(row, "firstName");
-  const lastName = getMappedValue(row, "lastName");
-  const practiceKey = normalizePracticeKey(getMappedValue(row, "practicing"));
-  const attendedWorkshop = normalizeBoolean(getMappedValue(row, "attendedWorkshop"));
-  const vahiniMember = normalizeBoolean(getMappedValue(row, "vahiniMember"));
-  const usesApp = normalizeBoolean(getMappedValue(row, "usesApp"));
-  const becomeVolunteer = normalizeBoolean(getMappedValue(row, "becomeVolunteer"));
-  const becomeFacilitator = normalizeBoolean(getMappedValue(row, "becomeFacilitator"));
-  const becomeTrainer = normalizeBoolean(getMappedValue(row, "becomeTrainer"));
-  const needGuidance = normalizeBoolean(getMappedValue(row, "needGuidance"));
-  const fullName = [firstName, lastName].filter(Boolean).join(" ").trim();
+  const fullName = getMappedValue(row, "fullName");
+  const campsText = getMappedValue(row, "campsAttended");
+  const campsCount = parseInt(campsText, 10);
+  
+  const appPracticeText = normalizeText(getMappedValue(row, "appPractice")).toLowerCase();
+  const guidanceText = normalizeText(getMappedValue(row, "trainerGuidance")).toLowerCase();
+  
+  const firstTimeAttendee = (!isNaN(campsCount) && campsCount === 0) || campsText === "0" || campsText.includes("0");
+  const existingPractitioner = !firstTimeAttendee && campsText !== "";
+
+  let practiceKey = "unknown";
+  if (appPracticeText === "yes") {
+    practiceKey = "regularly";
+  } else if (appPracticeText === "no" && !firstTimeAttendee) {
+    practiceKey = "restart";
+  } else if (appPracticeText === "no") {
+    practiceKey = "no";
+  }
+
+  const becomeVolunteer = guidanceText === "yes";
+  const needGuidance = guidanceText === "yes";
 
   return {
     id: getMappedValue(row, "id") || String(index + 1),
-    firstName,
-    lastName,
     fullName,
     dateOfBirth: getMappedValue(row, "dateOfBirth"),
     age: calculateAge(getMappedValue(row, "dateOfBirth")),
@@ -173,44 +141,28 @@ function normalizeUser(row, index) {
     profession: getMappedValue(row, "profession"),
     profilePhoto: resolveProfilePhoto(getMappedValue(row, "profilePhoto")),
     profilePhotoName: getMappedValue(row, "profilePhoto"),
-    attendedWorkshop,
-    vahiniMember,
-    practicing: getMappedValue(row, "practicing"),
+    
     practiceKey,
-    usesApp,
-    restartPractice: normalizeBoolean(getMappedValue(row, "restartPractice")),
-    attendOnlineWorkshop: normalizeBoolean(getMappedValue(row, "attendOnlineWorkshop")),
-    attendResidentialCamp: normalizeBoolean(getMappedValue(row, "attendResidentialCamp")),
     becomeVolunteer,
-    becomeFacilitator,
-    becomeTrainer,
-    helpOrganizeSessions: normalizeBoolean(getMappedValue(row, "helpOrganizeSessions")),
     needGuidance,
-    preferredOnline: normalizeBoolean(getMappedValue(row, "preferredOnline")),
-    preferredOfflineCity: normalizeBoolean(getMappedValue(row, "preferredOfflineCity")),
-    preferredResidentialCamp: normalizeBoolean(getMappedValue(row, "preferredResidentialCamp")),
-    preferredAppPractice: normalizeBoolean(getMappedValue(row, "preferredAppPractice")),
-    supportMessage: getMappedValue(row, "supportMessage"),
-    registrationDate: getMappedValue(row, "registrationDate"),
-    firstTimeAttendee: attendedWorkshop === false,
-    existingPractitioner: attendedWorkshop === true,
-    seekerType: attendedWorkshop === false ? "First Time Attendee" : "Existing Practitioner",
+    firstTimeAttendee,
+    existingPractitioner,
+    seekerType: firstTimeAttendee ? "First Time Attendee" : "Existing Practitioner",
     meditationStatus: practiceLabel(practiceKey),
-    initials: createInitials(firstName, lastName),
+    initials: fullName.split(" ").filter(Boolean).map(n => n[0]).join("").toUpperCase() || "P",
+    
+    campsAttended: campsText,
+    appPractice: getMappedValue(row, "appPractice"),
+    completedPrograms: getMappedValue(row, "completedPrograms"),
+    pastCampsFilter: getMappedValue(row, "pastCampsFilter"),
+    trainerGuidance: getMappedValue(row, "trainerGuidance"),
+
     interests: [
-      { label: "Restart Practice", active: normalizeBoolean(getMappedValue(row, "restartPractice")) === true },
-      { label: "Attend Online Workshop", active: normalizeBoolean(getMappedValue(row, "attendOnlineWorkshop")) === true },
-      { label: "Attend Residential Camp", active: normalizeBoolean(getMappedValue(row, "attendResidentialCamp")) === true },
-      { label: "Become Volunteer", active: becomeVolunteer === true },
-      { label: "Become Facilitator", active: becomeFacilitator === true },
-      { label: "Become Trainer", active: becomeTrainer === true },
-      { label: "Help Organize Sessions", active: normalizeBoolean(getMappedValue(row, "helpOrganizeSessions")) === true }
+      { label: "Restart Practice", active: practiceKey === "restart" },
+      { label: "Become Volunteer", active: becomeVolunteer === true }
     ],
     programPreferences: [
-      { label: "Online", active: normalizeBoolean(getMappedValue(row, "preferredOnline")) === true },
-      { label: "Offline In My City", active: normalizeBoolean(getMappedValue(row, "preferredOfflineCity")) === true },
-      { label: "Residential Camp", active: normalizeBoolean(getMappedValue(row, "preferredResidentialCamp")) === true },
-      { label: "App Practice", active: normalizeBoolean(getMappedValue(row, "preferredAppPractice")) === true }
+      { label: "App Practice", active: appPracticeText === "yes" }
     ]
   };
 }
@@ -218,9 +170,7 @@ function normalizeUser(row, index) {
 function collectCounts(users, field) {
   return users.reduce((accumulator, user) => {
     const value = normalizeText(user[field]);
-    if (!value) {
-      return accumulator;
-    }
+    if (!value) return accumulator;
     accumulator[value] = (accumulator[value] || 0) + 1;
     return accumulator;
   }, {});
@@ -244,21 +194,11 @@ function generateStats(users) {
   };
 
   users.forEach((user) => {
-    if (user.firstTimeAttendee) {
-      stats.firstTimeAttendees += 1;
-    }
-    if (user.practiceKey === "regularly") {
-      stats.activePractitioners += 1;
-    }
-    if (user.practiceKey === "restart") {
-      stats.wantToRestart += 1;
-    }
-    if (user.becomeVolunteer === true) {
-      stats.volunteerInterested += 1;
-    }
-    if (user.needGuidance === true) {
-      stats.needGuidance += 1;
-    }
+    if (user.firstTimeAttendee) stats.firstTimeAttendees += 1;
+    if (user.practiceKey === "regularly") stats.activePractitioners += 1;
+    if (user.practiceKey === "restart") stats.wantToRestart += 1;
+    if (user.becomeVolunteer === true) stats.volunteerInterested += 1;
+    if (user.needGuidance === true) stats.needGuidance += 1;
   });
 
   return stats;
@@ -278,54 +218,19 @@ function generateAnalytics(users) {
 
   users.forEach((user) => {
     practiceStatus[user.practiceKey] = (practiceStatus[user.practiceKey] || 0) + 1;
-    if (user.firstTimeAttendee) {
-      firstTime += 1;
-    }
-    if (user.existingPractitioner) {
-      existing += 1;
-    }
-    if (user.becomeVolunteer === true) {
-      volunteer += 1;
-    }
-    if (user.becomeFacilitator === true) {
-      facilitator += 1;
-    }
-    if (user.becomeTrainer === true) {
-      trainer += 1;
-    }
-    if (user.preferredOnline === true) {
-      prefOnline += 1;
-    }
-    if (user.preferredOfflineCity === true) {
-      prefOffline += 1;
-    }
-    if (user.preferredResidentialCamp === true) {
-      prefResidential += 1;
-    }
-    if (user.preferredAppPractice === true) {
-      prefApp += 1;
-    }
+    if (user.firstTimeAttendee) firstTime += 1;
+    if (user.existingPractitioner) existing += 1;
+    if (user.becomeVolunteer === true) volunteer += 1;
+    if (user.practiceKey === "regularly") prefApp += 1;
   });
 
   return {
-    practitionerSplit: {
-      firstTime,
-      existing
-    },
+    practitionerSplit: { firstTime, existing },
     practiceStatus,
-    interestSplit: {
-      volunteer,
-      facilitator,
-      trainer
-    },
+    interestSplit: { volunteer, facilitator, trainer },
     cityParticipation: summarizeParticipation(collectCounts(users, "city"), 10),
     stateParticipation: summarizeParticipation(collectCounts(users, "state"), 10),
-    programPreferences: {
-      online: prefOnline,
-      offline: prefOffline,
-      residential: prefResidential,
-      app: prefApp
-    }
+    programPreferences: { online: prefOnline, offline: prefOffline, residential: prefResidential, app: prefApp }
   };
 }
 
@@ -334,7 +239,7 @@ function loadCsvData() {
     const dataFile = resolveDataFile();
 
     if (!fs.existsSync(dataFile)) {
-      reject(new Error(`CSV file not found. Checked: ${DATA_FILE_CANDIDATES.join(", ")}`));
+      reject(new Error("CSV file not found."));
       return;
     }
 
@@ -349,12 +254,8 @@ function loadCsvData() {
 
     fs.createReadStream(dataFile)
       .pipe(csv())
-      .on("headers", (headers) => {
-        columns = headers;
-      })
-      .on("data", (row) => {
-        rows.push(row);
-      })
+      .on("headers", (headers) => { columns = headers; })
+      .on("data", (row) => { rows.push(row); })
       .on("end", () => {
         const users = rows.map((row, index) => normalizeUser(row, index));
         const stats = generateStats(users);
@@ -369,12 +270,6 @@ function loadCsvData() {
           loadedAt: new Date().toISOString(),
           sourcePath: dataFile
         };
-
-        console.log(`[Preksha Dashboard] Rows loaded: ${users.length}`);
-        console.log(`[Preksha Dashboard] CSV source: ${dataFile}`);
-        console.log(`[Preksha Dashboard] Columns detected: ${columns.join(", ")}`);
-        console.log(`[Preksha Dashboard] Statistics generated: ${JSON.stringify(stats)}`);
-
         resolve(store);
       })
       .on("error", (error) => {
@@ -385,39 +280,35 @@ function loadCsvData() {
 
 function matchesQuery(user, query) {
   const searchTerm = normalizeText(query.search).toLowerCase();
+  
   const exactMatch = (field, value) => {
-    if (!value || value === "all") {
-      return true;
-    }
+    if (!value || value === "all") return true;
     return normalizeText(user[field]).toLowerCase() === normalizeText(value).toLowerCase();
   };
+
+  const partialMatch = (field, value) => {
+    if (!value || value === "all") return true;
+    return normalizeText(user[field]).toLowerCase().includes(normalizeText(value).toLowerCase());
+  };
+
   const booleanMatch = (field, value) => {
-    if (!value || value === "all") {
-      return true;
-    }
+    if (!value || value === "all") return true;
     const normalized = value.toLowerCase();
-    if (normalized === "yes") {
-      return user[field] === true;
-    }
-    if (normalized === "no") {
-      return user[field] === false;
-    }
+    if (normalized === "yes") return user[field] === true || String(user[field]).toLowerCase() === 'yes';
+    if (normalized === "no") return user[field] === false || String(user[field]).toLowerCase() === 'no';
     return true;
   };
 
-  const searchMatch =
-    !searchTerm ||
-    [user.fullName, user.email, user.city, user.state, user.profession]
-      .join(" ")
-      .toLowerCase()
-      .includes(searchTerm);
+  const searchMatch = !searchTerm || [user.fullName, user.email, user.city, user.country].join(" ").toLowerCase().includes(searchTerm);
 
   return (
     searchMatch &&
     exactMatch("gender", query.gender) &&
     exactMatch("city", query.city) &&
-    exactMatch("state", query.state) &&
-    exactMatch("practiceKey", query.practiceStatus) &&
+    exactMatch("country", query.country) &&
+    exactMatch("campsAttended", query.campsAttended) &&
+    exactMatch("appPractice", query.appPractice) &&
+    partialMatch("completedPrograms", query.completedPrograms) &&
     booleanMatch("becomeVolunteer", query.volunteer) &&
     booleanMatch("needGuidance", query.guidance)
   );
@@ -433,34 +324,18 @@ function sortUsers(users, sortKey = "fullName-asc") {
   });
 }
 
-function safeUser(user) {
-  return {
-    ...user
-  };
-}
+function safeUser(user) { return { ...user }; }
 
 app.use("/public", express.static(PUBLIC_DIR));
-
-app.get("/", (req, res) => {
-  res.sendFile(DASHBOARD_FILE);
-});
+app.get("/", (req, res) => { res.sendFile(DASHBOARD_FILE); });
 
 app.get("/api/users", async (req, res) => {
   try {
     const data = await loadCsvData();
     const filtered = sortUsers(data.users.filter((user) => matchesQuery(user, req.query)), req.query.sort);
-    res.json({
-      rows: filtered.map(safeUser),
-      total: filtered.length,
-      loadedAt: data.loadedAt,
-      source: path.relative(__dirname, data.sourcePath).replace(/\\/g, "/")
-    });
+    res.json({ rows: filtered.map(safeUser), total: filtered.length });
   } catch (error) {
-    res.status(500).json({
-      error: error.message,
-      rows: [],
-      total: 0
-    });
+    res.status(500).json({ error: error.message, rows: [], total: 0 });
   }
 });
 
@@ -468,10 +343,7 @@ app.get("/api/users/:id", async (req, res) => {
   try {
     const data = await loadCsvData();
     const user = data.users.find((entry) => String(entry.id) === String(req.params.id));
-    if (!user) {
-      res.status(404).json({ error: `User ${req.params.id} not found.` });
-      return;
-    }
+    if (!user) return res.status(404).json({ error: "Not found" });
     res.json(safeUser(user));
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -482,11 +354,7 @@ app.get("/api/stats", async (req, res) => {
   try {
     const data = await loadCsvData();
     const users = data.users.filter((user) => matchesQuery(user, req.query));
-    res.json({
-      stats: generateStats(users),
-      loadedAt: data.loadedAt,
-      source: path.relative(__dirname, data.sourcePath).replace(/\\/g, "/")
-    });
+    res.json({ stats: generateStats(users) });
   } catch (error) {
     res.status(500).json({ error: error.message, stats: {} });
   }
@@ -495,20 +363,20 @@ app.get("/api/stats", async (req, res) => {
 app.get("/api/cities", async (req, res) => {
   try {
     const data = await loadCsvData();
-    const cities = [...new Set(data.users.map((user) => user.city).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+    const cities = [...new Set(data.users.map((u) => normalizeText(u.city)).filter(Boolean))].sort((a, b) => a.localeCompare(b));
     res.json(cities);
   } catch (error) {
-    res.status(500).json({ error: error.message, cities: [] });
+    res.status(500).json([]);
   }
 });
 
-app.get("/api/states", async (req, res) => {
+app.get("/api/countries", async (req, res) => {
   try {
     const data = await loadCsvData();
-    const states = [...new Set(data.users.map((user) => user.state).filter(Boolean))].sort((a, b) => a.localeCompare(b));
-    res.json(states);
+    const countries = [...new Set(data.users.map((u) => normalizeText(u.country)).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+    res.json(countries);
   } catch (error) {
-    res.status(500).json({ error: error.message, states: [] });
+    res.status(500).json([]);
   }
 });
 
@@ -516,23 +384,27 @@ app.get("/api/analytics", async (req, res) => {
   try {
     const data = await loadCsvData();
     const users = data.users.filter((user) => matchesQuery(user, req.query));
-    res.json({
-      analytics: generateAnalytics(users),
-      loadedAt: data.loadedAt,
-      source: path.relative(__dirname, data.sourcePath).replace(/\\/g, "/")
-    });
+    res.json({ analytics: generateAnalytics(users) });
   } catch (error) {
     res.status(500).json({ error: error.message, analytics: {} });
   }
 });
 
-loadCsvData()
-  .then(() => {
-    app.listen(PORT, () => {
-      console.log(`[Preksha Dashboard] Server running on http://localhost:${PORT}`);
-    });
-  })
-  .catch((error) => {
-    console.error(`[Preksha Dashboard] Startup failed: ${error.message}`);
-    process.exit(1);
+function startServer(portToListen) {
+  const serverInstance = app.listen(portToListen, () => {
+    console.log(`[Preksha Dashboard] Server running on http://localhost:${portToListen}`);
   });
+
+  serverInstance.on('error', (error) => {
+    if (error.code === 'EADDRINUSE') {
+      console.log(`Port ${portToListen} is busy. Trying port ${portToListen + 1}...`);
+      startServer(portToListen + 1);
+    } else {
+      console.error(`Unexpected server error:`, error);
+    }
+  });
+}
+
+loadCsvData()
+  .then(() => { startServer(PORT); })
+  .catch((error) => { console.error(`Startup initial verification failed: ${error.message}`); });

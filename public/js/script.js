@@ -7,12 +7,40 @@ window.addEventListener("DOMContentLoaded", () => {
   initializeFilterDropdowns();
   fetchDashboardDataset();
 
-  document.getElementById("filtersForm").addEventListener("change", () => { currentPage = 1; fetchDashboardDataset(); });
+  // Watch dropdown fields for structural change adjustments
+  document.getElementById("filtersForm").addEventListener("change", (e) => {
+    if (e.target.id !== "filterCompletedPrograms") {
+      currentPage = 1; 
+      fetchDashboardDataset();
+    }
+  });
+
+  // Watch manual programs typed string updates
+  const programInput = document.getElementById("filterCompletedPrograms");
+  if (programInput) {
+    programInput.addEventListener("input", debounce(() => {
+      currentPage = 1;
+      fetchDashboardDataset();
+    }, 400));
+  }
+
   document.getElementById("sortSelect").addEventListener("change", () => { currentPage = 1; fetchDashboardDataset(); });
   document.getElementById("globalSearch").addEventListener("input", debounce(() => { currentPage = 1; fetchDashboardDataset(); }, 300));
   
-  document.getElementById("prevPage").addEventListener("click", () => { if (currentPage > 1) { currentPage--; renderTablePage(); } });
-  document.getElementById("nextPage").addEventListener("click", () => { if (currentPage * recordsPerPage < allUserData.length) { currentPage++; renderTablePage(); } });
+  // PAGINATION FIX: Bound strictly once to fix jumping page gaps
+  document.getElementById("prevPage").addEventListener("click", () => { 
+    if (currentPage > 1) { 
+      currentPage--; 
+      renderTablePage(); 
+    } 
+  });
+  
+  document.getElementById("nextPage").addEventListener("click", () => { 
+    if (currentPage * recordsPerPage < allUserData.length) { 
+      currentPage++; 
+      renderTablePage(); 
+    } 
+  });
   
   document.getElementById("exportCsv").addEventListener("click", exportToCsvFile);
   document.getElementById("closeModal").addEventListener("click", () => document.getElementById("profileModal").classList.add("hidden"));
@@ -39,17 +67,30 @@ function getFilterParams() {
 
 async function initializeFilterDropdowns() {
   try {
-    const [citiesRes, statesRes] = await Promise.all([fetch('/api/cities'), fetch('/api/states')]);
-    const cities = await citiesRes.json();
-    const states = await statesRes.json();
+    const [citiesRes, countriesRes] = await Promise.all([
+      fetch('/api/cities'),
+      fetch('/api/countries')
+    ]);
 
-    const citySel = document.getElementById("filterCity");
-    cities.forEach(c => citySel.insertAdjacentHTML('beforeend', `<option value="${c}">${c}</option>`));
+    if (citiesRes.ok && countriesRes.ok) {
+      const cities = await citiesRes.json();
+      const countries = await countriesRes.json();
 
-    const stateSel = document.getElementById("filterState");
-    states.forEach(s => stateSel.insertAdjacentHTML('beforeend', `<option value="${s}">${s}</option>`));
+      const citySel = document.getElementById("filterCity");
+      if (citySel) {
+        citySel.innerHTML = '<option value="all">All Cities</option>';
+        cities.forEach(c => citySel.insertAdjacentHTML('beforeend', `<option value="${c}">${c}</option>`));
+      }
+
+      // Maps straight to your country dropdown field container
+      const countrySel = document.getElementById("filterCountry");
+      if (countrySel) {
+        countrySel.innerHTML = '<option value="all">All Countries</option>';
+        countries.forEach(co => countrySel.insertAdjacentHTML('beforeend', `<option value="${co}">${co}</option>`));
+      }
+    }
   } catch (err) {
-    console.error("Failed to populate dropdown items:", err);
+    console.error("Failed to populate dropdown items gracefully:", err);
   }
 }
 
@@ -73,7 +114,7 @@ async function fetchDashboardDataset() {
     renderTablePage();
     renderAnalyticsVisualizationCharts(analyticsData.analytics);
   } catch (err) {
-    console.error("Express synchronization pipeline loading issue:", err);
+    console.error("Express data synchronization engine problem:", err);
   }
 }
 
@@ -95,7 +136,7 @@ function renderTablePage() {
   document.getElementById("pageIndicator").innerText = `Page ${currentPage}`;
 
   if (allUserData.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; padding:30px; color:var(--muted);">No matching community database profiles located.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; padding:30px; color:var(--muted);">No matching profiles located.</td></tr>`;
     return;
   }
 
@@ -108,17 +149,20 @@ function renderTablePage() {
       ? `<img src="${user.profilePhoto}" alt="Avatar" class="table-avatar"/>`
       : `<div class="table-avatar">${user.initials}</div>`;
 
+    const appText = user.appPractice ? user.appPractice : (user.usesApp ? 'Yes' : 'No');
+    const guidanceText = user.trainerGuidance ? user.trainerGuidance : (user.needGuidance ? 'Yes' : 'No');
+
     const rowHtml = `
       <tr class="fade-in">
         <td>${photoMarkup}</td>
         <td><strong>${user.fullName}</strong></td>
-        <td>${user.gender || '-'}</td>
+        <td>${user.email || '-'}</td>
+        <td>${user.mobile || '-'}</td>
+        <td>${user.country || '-'}</td>
         <td>${user.city || '-'}</td>
-        <td>${user.state || '-'}</td>
-        <td>${user.profession || '-'}</td>
-        <td><span class="status-badge">${user.meditationStatus}</span></td>
-        <td><span class="status-badge ${user.becomeVolunteer ? 'yes' : 'no'}">${user.becomeVolunteer ? 'Yes' : 'No'}</span></td>
-        <td><span class="status-badge ${user.needGuidance ? 'yes' : 'no'}">${user.needGuidance ? 'Yes' : 'No'}</span></td>
+        <td>${user.languages || '-'}</td>
+        <td><span class="status-badge ${String(appText).toLowerCase() === 'yes' ? 'yes' : 'no'}">${appText}</span></td>
+        <td><span class="status-badge ${String(guidanceText).toLowerCase() === 'yes' ? 'yes' : 'no'}">${guidanceText}</span></td>
         <td><button class="profile-button" onclick="launchUserProfileModal('${user.id}')">View</button></td>
       </tr>
     `;
@@ -136,51 +180,40 @@ async function launchUserProfileModal(userId) {
       ? `<img src="${user.profilePhoto}" alt="Avatar"/>` 
       : `<span>${user.initials}</span>`;
 
-    let interestsListMarkup = user.interests.map(i => `
-      <div class="detail-card">
-        <span class="chip-label">${i.label}</span>
-        <strong style="color: ${i.active ? '#3d6b3d' : 'var(--muted)'}">${i.active ? 'Yes' : 'No'}</strong>
-      </div>
-    `).join('');
-
-    let prefListMarkup = user.programPreferences.map(p => `
-      <div class="detail-card">
-        <span class="chip-label">${p.label} Preference</span>
-        <strong style="color: ${p.active ? 'var(--maroon)' : 'var(--muted)'}">${p.active ? 'Active' : 'Not Selected'}</strong>
-      </div>
-    `).join('');
-
     document.getElementById("modalContent").innerHTML = `
       <div class="featured-header" style="margin-bottom: 20px;">
         <div class="modal-avatar">${avatarMarkup}</div>
         <div>
-          <p class="brand-kicker">${user.seekerType}</p>
+          <p class="brand-kicker">${user.seekerType || 'Community Member'}</p>
           <h3>${user.fullName}</h3>
-          <p style="margin:4px 0 0; color:var(--muted);">${user.profession || 'Profession Unspecified'} | ${user.city}, ${user.state}</p>
+          <p style="margin:4px 0 0; color:var(--muted);">${user.email} | ${user.city}, ${user.country}</p>
         </div>
       </div>
-      <div class="modal-grid">
-        <div class="detail-card"><span>Email Address</span>strong>${user.email || '-'}</strong></div>
-        <div class="detail-card"><span>Mobile Number</span><strong>${user.mobile || '-'}</strong></div>
-        <div class="detail-card"><span>Gender</span><strong>${user.gender || '-'}</strong></div>
-        <div class="detail-card"><span>Age / Date of Birth</span><strong>${user.age ? user.age + ' Years' : '-'} (${user.dateOfBirth || '-'})</strong></div>
-        <div class="detail-card"><span>Current Practice Level</span><strong>${user.meditationStatus}</strong></div>
-        <div class="detail-card"><span>Languages Known</span><strong>${user.languages || '-'}</strong></div>
-      </div>
+      
       <div class="modal-section">
-        <h4>Community Engagement Interests</h4>
-        <div class="modal-grid">${interestsListMarkup}</div>
-      </div>
-      <div class="modal-section">
-        <h4>Program Delivery Platform Preferences</h4>
-        <div class="modal-grid">${prefListMarkup}</div>
-      </div>
-      ${user.supportMessage ? `
-        <div class="modal-section">
-          <h4>Message / Support Notes</h4>
-          <div class="support-card">${user.supportMessage}</div>
+        <h4>Core Contact Information</h4>
+        <div class="modal-grid">
+          <div class="detail-card"><span>Submission ID</span><strong>${user.id || '-'}</strong></div>
+          <div class="detail-card"><span>Full Name</span><strong>${user.fullName || '-'}</strong></div>
+          <div class="detail-card"><span>Email Address</span><strong>${user.email || '-'}</strong></div>
+          <div class="detail-card"><span>Phone/Mobile</span><strong>${user.mobile || '-'}</strong></div>
+          <div class="detail-card"><span>Country</span><strong>${user.country || '-'}</strong></div>
+          <div class="detail-card"><span>City</span><strong>${user.city || '-'}</strong></div>
+          <div class="detail-card"><span>State</span><strong>${user.state || '-'}</strong></div>
+          <div class="detail-card"><span>Language</span><strong>${user.languages || '-'}</strong></div>
         </div>
-      ` : ''}
+      </div>
+
+      <div class="modal-section">
+        <h4>Survey Response Details</h4>
+        <div class="modal-grid">
+          <div class="detail-card"><span>Number of camps attended ?</span><strong>${user.campsAttended || '0'}</strong></div>
+          <div class="detail-card"><span>Practising via APP - Yes or No</span><strong>${user.appPractice || 'No'}</strong></div>
+          <div class="detail-card"><span>Which programs have you completed?</span><strong>${user.completedPrograms || 'None Specified'}</strong></div>
+          <div class="detail-card"><span>Past camps - some useful filter</span><strong>${user.pastCampsFilter || 'None Specified'}</strong></div>
+          <div class="detail-card"><span>Would you like to receive guidance from a Preksha trainer/volunteer?</span><strong>${user.trainerGuidance || 'No'}</strong></div>
+        </div>
+      </div>
     `;
     document.getElementById("profileModal").classList.remove("hidden");
   } catch (err) {
@@ -273,19 +306,20 @@ function renderAnalyticsVisualizationCharts(analytics) {
 function exportToCsvFile() {
   if (!allUserData.length) return alert("No available metadata rows to trigger export.");
   
-  const columnHeaders = ["Full Name", "Gender", "City", "State", "Profession", "Practice Status", "Volunteer Interest", "Guidance Status"];
+  const columnHeaders = ["Submission ID", "Full Name", "Email", "Phone/Mobile", "Country", "City", "State", "Language", "Submit Time"];
   const outputRows = [columnHeaders.join(",")];
 
   allUserData.forEach(u => {
     const serializedRow = [
+      `"${u.id}"`,
       `"${u.fullName.replace(/"/g, '""')}"`,
-      `"${(u.gender || '').replace(/"/g, '""')}"`,
+      `"${(u.email || '').replace(/"/g, '""')}"`,
+      `"${(u.mobile || '').replace(/"/g, '""')}"`,
+      `"${(u.country || '').replace(/"/g, '""')}"`,
       `"${(u.city || '').replace(/"/g, '""')}"`,
       `"${(u.state || '').replace(/"/g, '""')}"`,
-      `"${(u.profession || '').replace(/"/g, '""')}"`,
-      `"${u.meditationStatus}"`,
-      `"${u.becomeVolunteer ? 'Yes' : 'No'}"`,
-      `"${u.needGuidance ? 'Yes' : 'No'}"`
+      `"${(u.languages || '').replace(/"/g, '""')}"`,
+      `"${u.registrationDate || ''}"`
     ];
     outputRows.push(serializedRow.join(","));
   });
