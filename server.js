@@ -4,11 +4,22 @@ const path = require("path");
 const csv = require("csv-parser");
 const csvMapping = require("./config/csvMapping");
 
+// Allow running CSV parsing even if the user provides a placeholder/HTML file as `preksha.sql`.
+// The actual dataset used by this dashboard is still the CSV (data.csv / data/data.csv / data/sampleData.csv).
+
+// NOTE: This project currently loads data from CSV because `preksha.sql` in this repo is not a valid SQL dump.
+// The frontend expects the same API contract; backend will still provide it.
+
+
 const app = express();
 const PORT = process.env.PORT || 3003;
 const PUBLIC_DIR = path.join(__dirname, "public");
 const DASHBOARD_FILE = path.join(__dirname, "index.html");
 const DATA_FILE_CANDIDATES = [
+  // Primary target data file requested
+  path.join(__dirname, "data", "Preksha users data.csv"),
+  // Fallbacks
+  path.join(__dirname, "data", "p.sql"),
   path.join(__dirname, "data.csv"),
   path.join(__dirname, "data", "data.csv"),
   path.join(__dirname, "data", "sampleData.csv")
@@ -229,7 +240,8 @@ function generateAnalytics(users) {
     practiceStatus,
     interestSplit: { volunteer, facilitator, trainer },
     cityParticipation: summarizeParticipation(collectCounts(users, "city"), 10),
-    stateParticipation: summarizeParticipation(collectCounts(users, "state"), 10),
+    // Switched calculation to capture country distribution profile lists
+    stateParticipation: summarizeParticipation(collectCounts(users, "country"), 10),
     programPreferences: { online: prefOnline, offline: prefOffline, residential: prefResidential, app: prefApp }
   };
 }
@@ -239,7 +251,7 @@ function loadCsvData() {
     const dataFile = resolveDataFile();
 
     if (!fs.existsSync(dataFile)) {
-      reject(new Error("CSV file not found."));
+      reject(new Error(`CSV file not found. Checked: ${dataFile}`));
       return;
     }
 

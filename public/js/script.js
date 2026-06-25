@@ -7,7 +7,7 @@ window.addEventListener("DOMContentLoaded", () => {
   initializeFilterDropdowns();
   fetchDashboardDataset();
 
-  // Watch dropdown fields for structural change adjustments
+  // Unified select configuration triggers
   document.getElementById("filtersForm").addEventListener("change", (e) => {
     if (e.target.id !== "filterCompletedPrograms") {
       currentPage = 1; 
@@ -15,7 +15,7 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Watch manual programs typed string updates
+  // Manual program text typing entries observer
   const programInput = document.getElementById("filterCompletedPrograms");
   if (programInput) {
     programInput.addEventListener("input", debounce(() => {
@@ -27,7 +27,7 @@ window.addEventListener("DOMContentLoaded", () => {
   document.getElementById("sortSelect").addEventListener("change", () => { currentPage = 1; fetchDashboardDataset(); });
   document.getElementById("globalSearch").addEventListener("input", debounce(() => { currentPage = 1; fetchDashboardDataset(); }, 300));
   
-  // PAGINATION FIX: Bound strictly once to fix jumping page gaps
+  // FIXED PAGINATION ROUTINE: Isolated to run precisely once per manual click action
   document.getElementById("prevPage").addEventListener("click", () => { 
     if (currentPage > 1) { 
       currentPage--; 
@@ -82,7 +82,6 @@ async function initializeFilterDropdowns() {
         cities.forEach(c => citySel.insertAdjacentHTML('beforeend', `<option value="${c}">${c}</option>`));
       }
 
-      // Maps straight to your country dropdown field container
       const countrySel = document.getElementById("filterCountry");
       if (countrySel) {
         countrySel.innerHTML = '<option value="all">All Countries</option>';
@@ -288,15 +287,23 @@ function renderAnalyticsVisualizationCharts(analytics) {
     options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false } } }
   });
 
+  // Country Participation visual rendering configuration block replacement
   safeDestroyChart("stateParticipation");
-  const statesData = analytics.stateParticipation || [];
+  const countriesData = analytics.stateParticipation || [];
+  
+  const stateCardHeading = document.querySelector("#reports h4");
+  if (stateCardHeading) {
+    stateCardHeading.innerText = "Country Participation";
+  }
+
   chartInstances["stateParticipation"] = new Chart(document.getElementById("stateChart"), {
     type: 'polarArea',
     data: {
-      labels: statesData.map(s => s.label),
+      labels: countriesData.map(c => c.label),
       datasets: [{
-        data: statesData.map(s => s.count),
-        backgroundColor: ['rgba(143,37,32,0.85)', 'rgba(212,161,74,0.85)', 'rgba(94,24,23,0.85)', 'rgba(200,164,107,0.85)', 'rgba(118,98,85,0.85)']
+        label: 'Countries Count',
+        data: countriesData.map(c => c.count),
+        backgroundColor: ['#8f2520', '#d4a14a', '#5e1817', '#c8a46b', '#766255']
       }]
     },
     options: { responsive: true, maintainAspectRatio: false }
@@ -304,7 +311,7 @@ function renderAnalyticsVisualizationCharts(analytics) {
 }
 
 function exportToCsvFile() {
-  if (!allUserData.length) return alert("No available metadata rows to trigger export.");
+  if (!allUserData.length) return alert("No available rows to trigger export.");
   
   const columnHeaders = ["Submission ID", "Full Name", "Email", "Phone/Mobile", "Country", "City", "State", "Language", "Submit Time"];
   const outputRows = [columnHeaders.join(",")];
