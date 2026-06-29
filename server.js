@@ -10,7 +10,6 @@ const csvMapping = require("./config/csvMapping");
 // NOTE: This project currently loads data from CSV because `preksha.sql` in this repo is not a valid SQL dump.
 // The frontend expects the same API contract; backend will still provide it.
 
-
 const app = express();
 const PORT = process.env.PORT || 3003;
 const PUBLIC_DIR = path.join(__dirname, "public");
@@ -18,11 +17,7 @@ const DASHBOARD_FILE = path.join(__dirname, "index.html");
 const DATA_FILE_CANDIDATES = [
   // Primary target data file requested
   path.join(__dirname, "data", "Preksha users data.csv"),
-  // Fallbacks
-  path.join(__dirname, "data", "p.sql"),
-  path.join(__dirname, "data.csv"),
-  path.join(__dirname, "data", "data.csv"),
-  path.join(__dirname, "data", "sampleData.csv")
+
 ];
 
 const TRUE_VALUES = new Set(["yes", "1", "true"]);
@@ -46,6 +41,123 @@ function normalizeText(value) {
   return String(value ?? "").trim();
 }
 
+function toTitleCase(value) {
+  return normalizeText(value)
+    .split(" ")
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
+}
+
+const CITY_ALIASES = {
+  ahemdabad: "Ahmedabad",
+  ahmedabad: "Ahmedabad",
+  aurangabad: "Chhatrapati Sambhajinagar",
+  bangalore: "Bengaluru",
+  banglore: "Bengaluru",
+  bengaluru: "Bengaluru",
+  beawar: "Beawar",
+  beawer: "Beawar",
+  bombay: "Mumbai",
+  "chatrapati sambhajinagar": "Chhatrapati Sambhajinagar",
+  "chhatrapati sambhaji nagar aurangabad": "Chhatrapati Sambhajinagar",
+  mumbai: "Mumbai",
+  gurgaon: "Gurugram",
+  gurgoan: "Gurugram",
+  gurugram: "Gurugram",
+  guwahati: "Guwahati",
+  guwhati: "Guwahati",
+  kgf: "KGF",
+  "k g f": "KGF",
+  ladnu: "Ladnun",
+  ladnun: "Ladnun",
+  "navi mumbai": "Navi Mumbai",
+  navimumbai: "Navi Mumbai",
+  "new delhi": "Delhi",
+  delhi: "Delhi",
+  sardarshahar: "Sardarshahar",
+  sardarshahr: "Sardarshahar",
+  sardarshar: "Sardarshahar",
+  sardrarshaahr: "Sardarshahar",
+  shardarshar: "Sardarshahar",
+  "sri ganganagar": "Sri Ganganagar",
+  sriganganagar: "Sri Ganganagar",
+  surat: "Surat",
+  walajabad: "Walajabad",
+  walajahbad: "Walajabad"
+};
+
+function normalizeLocationKey(value) {
+  return normalizeText(value)
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[().-]/g, " ")
+    .replace(/\s*,\s*/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+}
+
+function canonicalizeLocationName(rawValue) {
+  const cleaned = normalizeText(rawValue)
+    .replace(/\s+/g, " ")
+    .replace(/\s*,\s*/g, ", ")
+    .replace(/\.+$/g, "");
+
+  if (!cleaned || cleaned.toLowerCase() === "null") {
+    return "";
+  }
+
+  const normalizedKey = normalizeLocationKey(cleaned);
+  if (CITY_ALIASES[normalizedKey]) {
+    return CITY_ALIASES[normalizedKey];
+  }
+
+  return cleaned
+    .split(",")
+    .map((part) => toTitleCase(part))
+    .join(", ");
+}
+
+function buildUniqueCanonicalCities(cityValues) {
+  const uniqueCities = new Map();
+
+  cityValues.forEach((value) => {
+    const canonicalCity = canonicalizeLocationName(value);
+    if (!canonicalCity) return;
+
+    const normalizedKey = normalizeLocationKey(canonicalCity);
+    if (!normalizedKey || uniqueCities.has(normalizedKey)) return;
+    uniqueCities.set(normalizedKey, canonicalCity);
+  });
+
+  return [...uniqueCities.values()].sort((left, right) => left.localeCompare(right));
+}
+
+function isDuplicateCityName(existingCities, candidateCity) {
+  const normalizedCandidate = canonicalizeLocationName(candidateCity);
+  if (!normalizedCandidate) return false;
+  return existingCities.some((city) => canonicalizeLocationName(city) === normalizedCandidate);
+}
+
+function parsePracticeStatus(rawValue) {
+  const normalized = normalizeText(rawValue).toLowerCase();
+  if (!normalized || normalized === "null") {
+    return "unknown";
+  }
+  if (normalized.startsWith("yes")) {
+    if (normalized.includes("sometimes")) return "sometimes";
+    return "regularly";
+  }
+  if (normalized.includes("restart")) {
+    return "restart";
+  }
+  if (normalized === "no") {
+    return "no";
+  }
+  return "unknown";
+}
+
 function normalizeBoolean(value) {
   const normalized = normalizeText(value).toLowerCase();
   if (!normalized) return null;
@@ -62,9 +174,9 @@ function matchColumn(row, aliases = []) {
 }
 
 function getMappedValue(row, key) {
-  const aliases = csvMapping[key] || [];
+  const aliases = csvMapping[key] || [key];
   const matchedAlias = matchColumn(row, aliases);
-  if (!matchedAlias) return "";
+  if (!matchedAlias) return normalizeText(row[key]);
   const actualKey = Object.keys(row).find(
     (column) => column.trim().toLowerCase() === matchedAlias.trim().toLowerCase()
   );
@@ -113,23 +225,15 @@ function resolveProfilePhoto(rawPhoto) {
 
 function normalizeUser(row, index) {
   const fullName = getMappedValue(row, "fullName");
-  const campsText = getMappedValue(row, "campsAttended");
-  const campsCount = parseInt(campsText, 10);
-  
-  const appPracticeText = normalizeText(getMappedValue(row, "appPractice")).toLowerCase();
   const guidanceText = normalizeText(getMappedValue(row, "trainerGuidance")).toLowerCase();
   
-  const firstTimeAttendee = (!isNaN(campsCount) && campsCount === 0) || campsText === "0" || campsText.includes("0");
-  const existingPractitioner = !firstTimeAttendee && campsText !== "";
-
-  let practiceKey = "unknown";
-  if (appPracticeText === "yes") {
-    practiceKey = "regularly";
-  } else if (appPracticeText === "no" && !firstTimeAttendee) {
-    practiceKey = "restart";
-  } else if (appPracticeText === "no") {
-    practiceKey = "no";
-  }
+  // Directly targeting required properties from the spreadsheet dataset
+  const attendedBefore = normalizeText(getMappedValue(row, "attended_before")).toLowerCase();
+  const currentlyPracticing = normalizeText(getMappedValue(row, "currently_practicing"));
+  const practiceKey = parsePracticeStatus(currentlyPracticing);
+  
+  const firstTimeAttendee = attendedBefore === "no";
+  const activePractitioner = practiceKey === "regularly" || practiceKey === "sometimes";
 
   const becomeVolunteer = guidanceText === "yes";
   const needGuidance = guidanceText === "yes";
@@ -143,7 +247,7 @@ function normalizeUser(row, index) {
     mobile: getMappedValue(row, "mobile"),
     email: getMappedValue(row, "email"),
     country: getMappedValue(row, "country"),
-    city: getMappedValue(row, "city"),
+    city: canonicalizeLocationName(getMappedValue(row, "city")),
     state: getMappedValue(row, "state"),
     address: getMappedValue(row, "address"),
     pincode: getMappedValue(row, "pincode"),
@@ -157,24 +261,16 @@ function normalizeUser(row, index) {
     becomeVolunteer,
     needGuidance,
     firstTimeAttendee,
-    existingPractitioner,
+    activePractitioner,
     seekerType: firstTimeAttendee ? "First Time Attendee" : "Existing Practitioner",
     meditationStatus: practiceLabel(practiceKey),
     initials: fullName.split(" ").filter(Boolean).map(n => n[0]).join("").toUpperCase() || "P",
     
-    campsAttended: campsText,
+    campsAttended: getMappedValue(row, "campsAttended"),
     appPractice: getMappedValue(row, "appPractice"),
     completedPrograms: getMappedValue(row, "completedPrograms"),
     pastCampsFilter: getMappedValue(row, "pastCampsFilter"),
-    trainerGuidance: getMappedValue(row, "trainerGuidance"),
-
-    interests: [
-      { label: "Restart Practice", active: practiceKey === "restart" },
-      { label: "Become Volunteer", active: becomeVolunteer === true }
-    ],
-    programPreferences: [
-      { label: "App Practice", active: appPracticeText === "yes" }
-    ]
+    trainerGuidance: getMappedValue(row, "trainerGuidance")
   };
 }
 
@@ -206,7 +302,7 @@ function generateStats(users) {
 
   users.forEach((user) => {
     if (user.firstTimeAttendee) stats.firstTimeAttendees += 1;
-    if (user.practiceKey === "regularly") stats.activePractitioners += 1;
+    if (user.activePractitioner) stats.activePractitioners += 1;
     if (user.practiceKey === "restart") stats.wantToRestart += 1;
     if (user.becomeVolunteer === true) stats.volunteerInterested += 1;
     if (user.needGuidance === true) stats.needGuidance += 1;
@@ -230,9 +326,9 @@ function generateAnalytics(users) {
   users.forEach((user) => {
     practiceStatus[user.practiceKey] = (practiceStatus[user.practiceKey] || 0) + 1;
     if (user.firstTimeAttendee) firstTime += 1;
-    if (user.existingPractitioner) existing += 1;
+    else existing += 1;
     if (user.becomeVolunteer === true) volunteer += 1;
-    if (user.practiceKey === "regularly") prefApp += 1;
+    if (user.activePractitioner) prefApp += 1;
   });
 
   return {
@@ -240,7 +336,6 @@ function generateAnalytics(users) {
     practiceStatus,
     interestSplit: { volunteer, facilitator, trainer },
     cityParticipation: summarizeParticipation(collectCounts(users, "city"), 10),
-    // Switched calculation to capture country distribution profile lists
     stateParticipation: summarizeParticipation(collectCounts(users, "country"), 10),
     programPreferences: { online: prefOnline, offline: prefOffline, residential: prefResidential, app: prefApp }
   };
@@ -311,12 +406,15 @@ function matchesQuery(user, query) {
     return true;
   };
 
+  const queryCityNormalized = query.city && query.city !== "all" ? canonicalizeLocationName(query.city) : null;
+  const cityMatch = !queryCityNormalized || user.city === queryCityNormalized;
+
   const searchMatch = !searchTerm || [user.fullName, user.email, user.city, user.country].join(" ").toLowerCase().includes(searchTerm);
 
   return (
     searchMatch &&
     exactMatch("gender", query.gender) &&
-    exactMatch("city", query.city) &&
+    cityMatch &&
     exactMatch("country", query.country) &&
     exactMatch("campsAttended", query.campsAttended) &&
     exactMatch("appPractice", query.appPractice) &&
@@ -375,10 +473,27 @@ app.get("/api/stats", async (req, res) => {
 app.get("/api/cities", async (req, res) => {
   try {
     const data = await loadCsvData();
-    const cities = [...new Set(data.users.map((u) => normalizeText(u.city)).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+    const cities = buildUniqueCanonicalCities(data.users.map((u) => u.city));
     res.json(cities);
   } catch (error) {
     res.status(500).json([]);
+  }
+});
+
+app.get("/api/cities/validate", async (req, res) => {
+  try {
+    const data = await loadCsvData();
+    const inputCity = normalizeText(req.query.city);
+    const existingCities = data.users.map((user) => user.city);
+    const canonicalCity = canonicalizeLocationName(inputCity);
+
+    res.json({
+      inputCity,
+      canonicalCity,
+      duplicate: isDuplicateCityName(existingCities, inputCity)
+    });
+  } catch (error) {
+    res.status(500).json({ inputCity: "", canonicalCity: "", duplicate: false });
   }
 });
 

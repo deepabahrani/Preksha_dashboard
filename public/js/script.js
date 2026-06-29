@@ -65,6 +65,31 @@ function getFilterParams() {
   return params.toString();
 }
 
+function dedupeLocationOptions(values) {
+  const seen = new Map();
+
+  values.forEach((value) => {
+    const cleaned = String(value ?? "").trim();
+    if (!cleaned) return;
+    const key = cleaned
+      .normalize("NFKD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[().-]/g, " ")
+      .replace(/\s*,\s*/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .toLowerCase();
+
+    if (!key) return;
+
+    if (!seen.has(key)) {
+      seen.set(key, cleaned);
+    }
+  });
+
+  return [...seen.values()].sort((left, right) => left.localeCompare(right));
+}
+
 async function initializeFilterDropdowns() {
   try {
     const [citiesRes, countriesRes] = await Promise.all([
@@ -73,8 +98,8 @@ async function initializeFilterDropdowns() {
     ]);
 
     if (citiesRes.ok && countriesRes.ok) {
-      const cities = await citiesRes.json();
-      const countries = await countriesRes.json();
+      const cities = dedupeLocationOptions(await citiesRes.json());
+      const countries = dedupeLocationOptions(await countriesRes.json());
 
       const citySel = document.getElementById("filterCity");
       if (citySel) {
@@ -148,8 +173,8 @@ function renderTablePage() {
       ? `<img src="${user.profilePhoto}" alt="Avatar" class="table-avatar"/>`
       : `<div class="table-avatar">${user.initials}</div>`;
 
-    const appText = user.appPractice ? user.appPractice : (user.usesApp ? 'Yes' : 'No');
-    const guidanceText = user.trainerGuidance ? user.trainerGuidance : (user.needGuidance ? 'Yes' : 'No');
+    const appText = user.appPractice ? user.appPractice : 'No';
+    const guidanceText = user.trainerGuidance ? user.trainerGuidance : 'No';
 
     const rowHtml = `
       <tr class="fade-in">
@@ -160,7 +185,7 @@ function renderTablePage() {
         <td>${user.country || '-'}</td>
         <td>${user.city || '-'}</td>
         <td>${user.languages || '-'}</td>
-        <td><span class="status-badge ${String(appText).toLowerCase() === 'yes' ? 'yes' : 'no'}">${appText}</span></td>
+        <td><span class="status-badge ${user.activePractitioner ? 'yes' : 'no'}">${appText}</span></td>
         <td><span class="status-badge ${String(guidanceText).toLowerCase() === 'yes' ? 'yes' : 'no'}">${guidanceText}</span></td>
         <td><button class="profile-button" onclick="launchUserProfileModal('${user.id}')">View</button></td>
       </tr>
