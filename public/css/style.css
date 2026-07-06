@@ -1,5 +1,5 @@
 /* ==========================================================================
-   1. CORE VARIABLES & RESET
+   1. CORE VARIABLES & RESET (SINGLE UNIFIED ECOSYSTEM FONT)
    ========================================================================== */
 :root {
   --maroon: #8f2520;
@@ -18,6 +18,7 @@
 
 * {
   box-sizing: border-box;
+  scroll-behavior: smooth;
 }
 
 html, body {
@@ -25,11 +26,11 @@ html, body {
   width: 100vw;
   margin: 0;
   padding: 0;
-  overflow: hidden; /* Strict clamp on main window scrolling */
+  overflow: hidden;
 }
 
 body {
-  font-family: "Manrope", sans-serif;
+  font-family: "Manrope", sans-serif; /* Global implementation configuration */
   color: var(--text);
   background:
     radial-gradient(circle at top right, rgba(212, 161, 74, 0.1), transparent 25%),
@@ -39,7 +40,7 @@ body {
 }
 
 /* ==========================================================================
-   2. APPLICATION SHELL LAYOUT
+   2. APPLICATION SHELL FRAMEWORK
    ========================================================================== */
 .app-shell-modern {
   height: 100vh;
@@ -53,7 +54,7 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 24px;
-  padding: 14px 24px; /* Increased padding for breathing room */
+  padding: 14px 24px;
   background: rgba(255, 252, 247, 0.92);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border);
@@ -68,7 +69,7 @@ body {
 }
 
 .navbar-primary-logo {
-  height: 48px; /* Fixed: restored healthy prominent branding height */
+  height: 48px;
   width: auto;
   object-fit: contain;
   display: block;
@@ -103,54 +104,22 @@ body {
   box-shadow: 0 4px 12px rgba(94, 24, 23, 0.05);
 }
 
-.search-extended-wrapper {
-  flex-grow: 1;
-  max-width: 380px;
-}
-
-.search-extended-wrapper input {
-  width: 100%;
-  height: 38px;
-  padding: 0 16px;
-  font-size: 0.85rem;
-  font-family: inherit;
-  color: var(--text);
-  background: var(--white);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  transition: all 0.2s ease;
-}
-
-.search-extended-wrapper input:focus {
-  outline: none;
-  border-color: var(--maroon);
-  box-shadow: 0 0 0 3px rgba(143, 37, 32, 0.08);
-}
-
-/* ==========================================================================
-   3. MAIN WORKSPACE CONTAINER
-   ========================================================================== */
 .main-panel-modern {
   flex-grow: 1;
-  padding: 16px 24px;
+  padding: 20px 24px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 20px;
   overflow-y: auto;
   overflow-x: hidden;
-  height: calc(100vh - 77px);
-}
-
-section:target {
-  display: flex !important;
+  height: calc(100vh - 115px);
 }
 
 /* ==========================================================================
-   4. SECTION COMPONENTS
+   3. HERO SUMMARY CARD ELEMENT WITH RIGID VISUAL HIERARCHY
    ========================================================================== */
-
 .hero-section {
-  padding: 24px 32px; /* Extra breathing space for content */
+  padding: 32px;
   background: linear-gradient(135deg, rgba(255, 251, 244, 0.95), rgba(255, 255, 255, 0.95));
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -161,52 +130,54 @@ section:target {
 .hero-main-split {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  gap: 40px; /* Generous separation channel */
+  align-items: flex-start;
+  gap: 40px;
   width: 100%;
 }
 
 .hero-copy {
   flex: 1;
-  min-width: 0; /* Prevents text elements from breaking layout constraints */
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
 }
 
-.hero-kicker, .brand-kicker, .section-kicker {
-  font-size: 0.75rem;
-  letter-spacing: 0.1em;
+.hierarchical-title {
+  font-size: 1.5rem;
+  color: var(--maroon-dark);
+  line-height: 1.15;
+  margin: 0 0 6px 0;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+.hierarchical-subtitle {
+  font-size: 1rem;
+  letter-spacing: 0.12em;
   font-weight: 700;
   color: var(--saffron);
-  margin: 0 0 6px 0;
+  margin: 0 0 12px 0;
+  order: -1;
 }
 
-.hero-copy h3 {
-  font-family: "Cormorant Garamond", serif;
-  font-size: 2.2rem; /* Enhanced prominent heading size */
-  color: var(--maroon-dark);
-  line-height: 1.2;
-  margin: 0 0 10px 0;
-  font-weight: 700;
-  white-space: nowrap; /* Forces "Transforming Life Through Awareness" onto a single line */
-}
-
-.hero-text {
+.hierarchical-text {
   color: var(--muted);
-  line-height: 1.5;
+  line-height: 1.6;
   margin: 0;
-  font-size: 0.9rem;
-  max-width: 85%;
+  font-size: 0.95rem;
+  max-width: 75%;
 }
 
 .hero-symbol {
-  flex-shrink: 0; /* Strict constraint preventing the emblem wrap from shrinking */
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .hero-symbol img {
-  width: fit-content; /* Restored clear visibility */
-  height: 80%;
+  width: fit-content;
+  height: 90px;
   object-fit: contain;
   opacity: 0.95;
 }
@@ -215,12 +186,12 @@ section:target {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
   gap: 12px;
-  margin-top: 16px;
+  margin-top: 24px;
   width: 100%;
 }
 
 .hero-kpi {
-  padding: 10px 14px;
+  padding: 12px 14px;
   background: rgba(255, 249, 238, 0.8);
   border-radius: 10px;
   border: 1px solid #ebd9b9;
@@ -237,80 +208,140 @@ section:target {
 
 .hero-kpi strong {
   display: block;
-  margin-top: 2px;
-  font-size: 1.35rem;
+  margin-top: 4px;
+  font-size: 1.5rem;
   font-weight: 700;
   color: var(--maroon-dark);
 }
 
-.filters-panel, .table-panel, .analytics-panel {
-  padding: 16px 20px;
+/* ==========================================================================
+   4. CONSOLIDATED FILTER MATRIX WORKSPACE CARD (PRECISION UI ALIGNMENT)
+   ========================================================================== */
+.unified-management-card {
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   display: flex;
   flex-direction: column;
-}
-
-.filters-panel {
+  overflow: hidden;
+  margin-bottom: 20px;
   flex-shrink: 0;
 }
 
-.section-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 12px;
-  flex-shrink: 0;
+.management-card-head {
+  padding: 20px 24px 12px 24px;
+  border-bottom: 1px solid rgba(230, 213, 183, 0.4);
 }
 
-.section-head h3 {
-  font-family: "Cormorant Garamond", serif;
+.section-kicker {
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  color: var(--saffron);
+  margin: 0;
+}
+
+.section-headline {
   margin: 2px 0 0 0;
-  font-size: 1.25rem;
+  font-size: 1.4rem;
   color: var(--maroon-dark);
   font-weight: 700;
+}
+
+.card-filters-context {
+  padding: 24px;
+  background-color: rgba(255, 252, 247, 0.55);
+  border-bottom: 1px solid var(--border);
 }
 
 .filters-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
+  gap: 16px;
+  align-items: stretch;
+}
+
+.select-filter-item {
+  display: flex;
+  align-items: flex-end;
 }
 
 select, .filter-text-input {
   width: 100%;
-  height: 38px;
-  padding: 0 12px;
-  font-size: 0.82rem;
+  height: 42px; /* Uniform standard component vertical metrics */
+  padding: 0 16px;
+  font-size: 0.88rem;
   font-family: inherit;
+  font-weight: 500;
   background-color: var(--white);
   color: var(--text);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 10px;
   outline: none;
+  transition: all 0.2s ease;
+}
+
+select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23766255' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 16px;
+  padding-right: 40px;
+}
+
+select:focus, .filter-text-input:focus {
+  border-color: var(--maroon);
+  box-shadow: 0 0 0 3px rgba(143, 37, 32, 0.06);
 }
 
 /* ==========================================================================
-   5. DATA DIRECTORY TABLE WINDOW BLOCK
+   5. ACTION TOOLBARS & DIRECTORY SPREADSHEET ENGINE
    ========================================================================== */
-/* ==========================================================================
-   5. DATA DIRECTORY TABLE WINDOW BLOCK (FIXED TO FIT 5+ ROWS COMFORTABLY)
-   ========================================================================== */
-.table-panel {
-  min-height: 420px; /* Increased to ensure clear room for header, footer, and 5 rows */
+.card-search-utility-bar {
+  padding: 14px 24px;
+  background: var(--white);
+  border-bottom: 1px solid rgba(230, 213, 183, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.inner-search-input-wrapper {
   flex-grow: 1;
+  max-width: 460px;
+}
+
+.inner-search-input-wrapper input {
+  width: 100%;
+  height: 38px;
+  padding: 0 16px;
+  font-size: 0.85rem;
+  font-family: inherit;
+  color: var(--text);
+  background: #fffcf8;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  transition: all 0.2s ease;
+}
+
+.inner-search-input-wrapper input:focus {
+  outline: none;
+  border-color: var(--maroon);
+  box-shadow: 0 0 0 3px rgba(143, 37, 32, 0.08);
+}
+
+.table-panel {
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
   display: flex;
   flex-direction: column;
-}
-
-.table-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-shrink: 0;
 }
 
 .table-actions {
@@ -324,16 +355,14 @@ select, .filter-text-input {
   height: 36px;
 }
 
-/* Scroll Window - Bound to automatically expand up to a 5-6 row sweet spot */
-.table-wrap {
+/* Deeper data rows viewframe block window */
+.extended-viewport-scroller {
   overflow-y: auto;
   overflow-x: auto;
   flex-grow: 1;
-  height: 290px; /* Fixed height custom-tailored to show 5 data rows + table headers cleanly */
-  border: 1px solid var(--border);
-  border-radius: 10px;
+  height: 550px !important;
   background: var(--white);
-  margin: 12px 0 8px 0;
+  border-bottom: 1px solid var(--border);
 }
 
 table {
@@ -346,36 +375,35 @@ th {
   position: sticky;
   top: 0;
   z-index: 20;
-  background: #fffcf7;
+  background: #fffdf9;
   color: var(--muted);
-  font-weight: 600;
+  font-weight: 700;
   font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  padding: 12px 14px;
+  padding: 14px;
   border-bottom: 2px solid var(--border);
   white-space: nowrap;
 }
 
 td {
   padding: 10px 14px;
-  height: 52px; /* Set a predictable height for rows to prevent text overlaps */
-  border-bottom: 1px solid rgba(230, 213, 183, 0.5);
+  height: 52px;
+  border-bottom: 1px solid rgba(230, 213, 183, 0.35);
   font-size: 0.85rem;
   color: var(--text);
   white-space: nowrap;
   vertical-align: middle;
 }
 
-tr:last-child td {
-  border-bottom: none;
-}
-
 tr:hover td {
-  background-color: #fffbf4;
+  background-color: #fffbf5;
 }
 
-/* Avatars & Badges Markup */
+.text-right-aligned {
+  text-align: right;
+}
+
 .table-avatar {
   width: 30px;
   height: 30px;
@@ -409,7 +437,6 @@ tr:hover td {
   color: var(--maroon);
 }
 
-/* Controls Buttons styling */
 .button-primary, 
 .button-secondary, 
 .profile-button {
@@ -447,63 +474,65 @@ tr:hover td {
   border-color: var(--gold);
 }
 
-/* Footer Pagination Area Container */
-.table-footer {
+/* Polished high contrast pagination counter workspace footer */
+.table-footer-workspace-patch {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-top: 8px;
-  font-size: 0.82rem;
-  color: var(--muted);
+  padding: 16px 24px;
+  background-color: var(--white);
+  font-size: 0.88rem;
   flex-shrink: 0;
+}
+
+.records-summary-badge {
+  font-weight: 700;
+  color: var(--text);
+  background-color: #fff6e9;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(212, 161, 74, 0.25);
 }
 
 .pagination {
   display: flex;
   align-items: center;
   gap: 12px;
-}
-
-.pagination button {
-  height: 32px;
-  padding: 0 12px;
-}
-
-/* ==========================================================================
-   6. ANALYTICS CARD GRID BLOCK
-   ========================================================================== */
-.charts-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
-  margin-top: 8px;
-}
-
-.chart-card {
-  background: var(--white);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 14px;
-  display: flex;
-  flex-direction: column;
-  height: 240px;
-}
-
-.chart-card h4 {
-  font-family: "Cormorant Garamond", serif;
-  font-size: 1rem;
-  color: var(--maroon-dark);
-  margin: 0 0 10px 0;
+  color: var(--muted);
   font-weight: 600;
 }
 
-.chart-card canvas {
-  width: 100% !important;
-  height: calc(100% - 24px) !important;
+.pagination button {
+  height: 34px;
+  padding: 0 14px;
 }
 
 /* ==========================================================================
-   7. MODAL PROFILE SYSTEM (FIXED MAPPING SPLIT)
+   6. STICKY SYSTEM FOOTER CONTEXT BLOCK
+   ========================================================================== */
+.global-app-system-footer {
+  background: rgba(255, 252, 247, 0.95);
+  border-top: 1px solid var(--border);
+  padding: 12px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.78rem;
+  color: var(--muted);
+  flex-shrink: 0;
+  z-index: 90;
+}
+
+.footer-system-meta-links span {
+  font-weight: 600;
+  background-color: var(--cream);
+  padding: 4px 8px;
+  border-radius: 6px;
+  color: var(--text);
+}
+
+/* ==========================================================================
+   7. PROFILES MODAL SYSTEM
    ========================================================================== */
 .modal {
   position: fixed;
@@ -522,7 +551,7 @@ tr:hover td {
 .modal-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(50, 36,  brown, 0.35);
+  background: rgba(50, 36, 31, 0.35);
   backdrop-filter: blur(5px);
 }
 
@@ -576,6 +605,7 @@ tr:hover td {
   margin: 0;
   font-size: 1.4rem;
   color: var(--maroon-dark);
+  font-weight: 700;
 }
 
 .modal-section {
@@ -583,15 +613,14 @@ tr:hover td {
 }
 
 .modal-section h4 {
-  font-family: "Cormorant Garamond", serif;
   font-size: 1.15rem;
   color: var(--maroon);
   margin: 0 0 12px 0;
   border-bottom: 1px dashed var(--border);
   padding-bottom: 4px;
+  font-weight: 700;
 }
 
-/* Fixed: Structured grid items spacing to stop labels colliding with data strings */
 .modal-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -605,13 +634,13 @@ tr:hover td {
   background: rgba(255, 253, 249, 0.8);
   display: flex;
   flex-direction: column;
-  gap: 4px; /* Ensured margin space between rows */
+  gap: 4px;
 }
 
 .detail-card span {
   display: block;
   font-size: 0.74rem;
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
   color: var(--muted);
   letter-spacing: 0.01em;
@@ -622,27 +651,30 @@ tr:hover td {
   font-size: 0.9rem;
   color: var(--text);
   word-break: break-word;
+  font-weight: 600;
 }
 
 /* ==========================================================================
-   8. MEDIA QUERIES & RESPONSIVE LAYOUTS
+   8. MEDIA MATRIX RESPONSIVENESS CONTROLS
    ========================================================================== */
 @media (max-width: 1400px) {
   .hero-kpis-row { grid-template-columns: repeat(3, 1fr); }
-  .charts-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 1200px) {
   .filters-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (max-width: 768px) {
   html, body { overflow-y: auto; height: auto; }
   .app-shell-modern, .main-panel-modern { height: auto; overflow: visible; }
-  .workspace-header { flex-direction: column; align-items: stretch; padding: 12px; gap: 12px; }
-  .nav-branding-group { flex-direction: column; gap: 12px; align-items: flex-start; }
-  .search-extended-wrapper { max-width: 100%; }
+  .workspace-header { flex-direction: column; align-items: center; padding: 12px; gap: 12px; }
+  .nav-branding-group { flex-direction: column; gap: 12px; align-items: center; }
+  .card-search-utility-bar { flex-direction: column; align-items: stretch; gap: 12px; }
+  .inner-search-input-wrapper { max-width: 100%; }
+  .hierarchical-title { font-size: 2rem; }
   .hero-main-split { flex-direction: column-reverse; align-items: flex-start; }
   .hero-kpis-row { grid-template-columns: repeat(2, 1fr); }
-  .filters-grid, .charts-grid, .modal-grid { grid-template-columns: 1fr; }
+  .filters-grid, .modal-grid { grid-template-columns: 1fr; }
+  .global-app-system-footer { flex-direction: column; gap: 10px; text-align: center; }
 }

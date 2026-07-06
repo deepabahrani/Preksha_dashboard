@@ -7,14 +7,14 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght=500;600;700&family=Manrope:wght@400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="/public/css/style.css" />
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   </head>
   <body>
     <div class="app-shell-modern">
+      
       <header class="workspace-header">
         <div class="nav-branding-group">
           <img
@@ -24,38 +24,30 @@
           />
           <nav class="top-nav-modern">
             <a href="#dashboard" class="nav-link-modern active">Dashboard</a>
-            <a href="#usersTable" class="nav-link-modern">Users</a>
-            <a href="#analytics" class="nav-link-modern">Analytics</a>
+            <a href="#workspaceCard" class="nav-link-modern">Users</a>
           </nav>
-        </div>
-
-        <div class="search-extended-wrapper">
-          <input
-            id="globalSearch"
-            type="search"
-            placeholder="Search practitioners by name, city, email..."
-          />
         </div>
       </header>
 
       <main class="main-panel-modern">
-        <section class="hero-section">
+        
+        <section class="hero-section" id="dashboard">
           <div class="hero-main-split">
             <div class="hero-copy">
-              <p class="hero-kicker">PREKSHA MEDITATION COMMUNITY</p>
-              <h3>Transforming Life Through Awareness</h3>
-              <p class="hero-text">
+              <p class="hierarchical-subtitle">PREKSHA MEDITATION COMMUNITY</p>
+              <h1 class="hierarchical-title">Transforming Life Through Awareness</h1>
+              <p class="hierarchical-text">
                 A unified portal for practitioners, first-time attendees,
                 volunteers, and program preferences across the Preksha
                 Meditation community.
               </p>
             </div>
-            <div class="hero-symbol">
+            <!-- <div class="hero-symbol">
               <img
                 src="/public/assets/preksha-logo.png"
                 alt="Preksha lotus emblem"
               />
-            </div>
+            </div> -->
           </div>
 
           <div class="hero-kpis-row">
@@ -86,76 +78,98 @@
           </div>
         </section>
 
-        <section class="filters-panel">
-          <div class="section-head">
+        <div class="unified-management-card" id="workspaceCard">
+          
+          <div class="management-card-head">
             <div>
-              <p class="section-kicker">Filters</p>
-              <h3>Refine community records</h3>
+              <!-- <p class="section-kicker">Workspace Control Center</p> -->
+              <h2 class="section-headline">Refine & Explore Records</h2>
             </div>
           </div>
-          <form id="filtersForm" class="filters-grid">
-            <select id="filterGender" name="gender">
-              <option value="all">All Genders</option>
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
-            </select>
 
-            <select id="filterCity" name="city">
-              <option value="all">All Cities</option>
-            </select>
-            <select id="filterCountry" name="country">
-              <option value="all">All Countries</option>
-            </select>
+          <div class="card-filters-context">
+            <form id="filtersForm" class="filters-grid">
+              <div class="select-filter-item">
+                <select id="filterGender" name="gender">
+                  <option value="all">All Genders</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                </select>
+              </div>
 
-            <select id="filterCampsAttended" name="campsAttended">
-              <option value="all">Number of camps attended ?</option>
-              <!-- <option value="0">0 Camps</option> -->
-              <option value="1">1 Camp</option>
-              <option value="2">2 Camps</option>
-              <option value="3">3 Camps</option>
-              <option value="4">4+ Camps</option>
-            </select>
+              <div class="select-filter-item">
+                <select id="filterCity" name="city">
+                  <option value="all">All Cities</option>
+                </select>
+              </div>
+              
+              <div class="select-filter-item">
+                <select id="filterCountry" name="country">
+                  <option value="all">All Countries</option>
+                </select>
+              </div>
 
-            <select id="filterAppPractice" name="appPractice">
-              <option value="all">Practising via Preksha application ?</option>
-              <option value="Yes">Yes</option>
-              <option value="No">No</option>
-            </select>
+              <div class="select-filter-item">
+                <select id="filterCampsAttended" name="campsAttended">
+                  <option value="all">Number of camps attended ?</option>
+                  <option value="1">1 Camp</option>
+                  <option value="2">2 Camps</option>
+                  <option value="3">3 Camps</option>
+                  <option value="4">4+ Camps</option>
+                </select>
+              </div>
 
-            <input
-              id="filterCompletedPrograms"
-              name="completedPrograms"
-              type="text"
-              class="filter-text-input"
-              placeholder="Which programs have you completed?"
-            />
+              <div class="select-filter-item">
+                <select id="filterAppPractice" name="appPractice">
+                  <option value="all">Practising via Preksha application ?</option>
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                </select>
+              </div>
 
-            <select id="filterVolunteer" name="volunteer">
-              <option value="all">Volunteer Interest</option>
-              <option value="yes">Yes</option>
-              <option value="no">No</option>
-            </select>
-            <select id="filterGuidance" name="guidance">
-              <option value="all">Guidance Status</option>
-              <option value="yes">Yes</option>
-              <option value="no">No</option>
-            </select>
-          </form>
-        </section>
+              <div class="select-filter-item">
+                <input
+                  id="filterCompletedPrograms"
+                  name="completedPrograms"
+                  type="text"
+                  class="filter-text-input"
+                  placeholder="Which programs have you completed?"
+                />
+              </div>
 
-        <section class="table-panel" id="usersTable">
-          <div class="section-head table-head">
-            <div>
-              <p class="section-kicker">Practitioner Directory</p>
-              <h3>All community users</h3>
+              <div class="select-filter-item">
+                <select id="filterVolunteer" name="volunteer">
+                  <option value="all">Volunteer Interest</option>
+                  <option value="yes">Yes</option>
+                  <option value="no">No</option>
+                </select>
+              </div>
+              
+              <div class="select-filter-item">
+                <select id="filterGuidance" name="guidance">
+                  <option value="all">Guidance Status</option>
+                  <option value="yes">Yes</option>
+                  <option value="no">No</option>
+                </select>
+              </div>
+            </form>
+          </div>
+
+          <div class="card-search-utility-bar">
+            <div class="inner-search-input-wrapper">
+              <input
+                id="globalSearch"
+                type="search"
+                placeholder="Search practitioners by name, city, email..."
+                aria-label="Search records"
+              />
             </div>
+            
             <div class="table-actions">
               <select id="sortSelect">
                 <option value="fullName-asc">Sort by Name A-Z</option>
                 <option value="fullName-desc">Sort by Name Z-A</option>
-                <option value="registrationDate-desc">
-                  Sort by Submit Time
-                </option>
+                <option value="registrationDate-desc">Sort by Submit Time</option>
               </select>
               <button id="exportCsv" type="button" class="button-secondary">
                 Export CSV
@@ -163,75 +177,50 @@
             </div>
           </div>
 
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Photo</th>
-                  <th>Full Name</th>
-                  <th>Email</th>
-                  <th>Phone/Mobile</th>
-                  <th>Country</th>
-                  <th>City</th>
-                  <th>Language</th>
-                  <th>App Practice</th>
-                  <th>Guidance</th>
-                  <th>Profile</th>
-                </tr>
-              </thead>
-              <tbody id="usersTableBody"></tbody>
-            </table>
-          </div>
+          <div class="table-panel" id="usersTable">
+            <div class="extended-viewport-scroller">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Photo</th>
+                    <th>Full Name</th>
+                    <th>Email</th>
+                    <th>Phone/Mobile</th>
+                    <th>Country</th>
+                    <th>City</th>
+                    <th>Language</th>
+                    <th>App Practice</th>
+                    <th>Guidance</th>
+                    <th class="text-right-aligned">Action Workspace</th>
+                  </tr>
+                </thead>
+                <tbody id="usersTableBody"></tbody>
+              </table>
+            </div>
 
-          <div class="table-footer">
-            <span id="tableSummary">0 records</span>
-            <div class="pagination">
-              <button id="prevPage" type="button" class="button-secondary">
-                Previous
-              </button>
-              <span id="pageIndicator">Page 1</span>
-              <button id="nextPage" type="button" class="button-secondary">
-                Next
-              </button>
+            <div class="table-footer-workspace-patch">
+              <span id="tableSummary" class="records-summary-badge">0 out of 0 Registrations</span>
+              <div class="pagination">
+                <button id="prevPage" type="button" class="button-secondary">
+                  Previous
+                </button>
+                <span id="pageIndicator">Page 1</span>
+                <button id="nextPage" type="button" class="button-secondary">
+                  Next
+                </button>
+              </div>
             </div>
           </div>
-        </section>
 
-        <section class="analytics-panel" id="analytics">
-          <div class="section-head analytics-head">
-            <div>
-              <p class="section-kicker">Analytics</p>
-              <h3>Dynamic meditation insights</h3>
-            </div>
-            <button id="downloadReport" type="button" class="button-primary">
-              Download Analytics Report
-            </button>
-          </div>
-
-          <div class="charts-grid">
-            <article class="chart-card">
-              <h4>First Time vs Existing Practitioners</h4>
-              <canvas id="practitionerSplitChart"></canvas>
-            </article>
-            <article class="chart-card">
-              <h4>Practice Status</h4>
-              <canvas id="practiceStatusChart"></canvas>
-            </article>
-            <article class="chart-card">
-              <h4>Volunteer / Facilitator / Trainer Interest</h4>
-              <canvas id="interestChart"></canvas>
-            </article>
-            <article class="chart-card">
-              <h4>City Participation</h4>
-              <canvas id="cityChart"></canvas>
-            </article>
-            <article class="chart-card" id="reports">
-              <h4>State Participation</h4>
-              <canvas id="stateChart"></canvas>
-            </article>
-          </div>
-        </section>
+        </div>
       </main>
+
+      <footer class="global-app-system-footer">
+        <p>&copy; 2026 Preksha Meditation International. Admin Management Portal Container Shell Viewport.</p>
+        <div class="footer-system-meta-links">
+          <!-- <span>Version 2.4.0 (Stable Environment Deployment)</span> -->
+        </div>
+      </footer>
     </div>
 
     <div id="profileModal" class="modal hidden">
