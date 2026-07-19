@@ -573,10 +573,10 @@ select:focus, .filter-text-input:focus {
 
 /* Deeper data rows viewframe block window */
 .extended-viewport-scroller {
-  overflow-y: auto;
+  overflow-y: visible;
   overflow-x: auto;
   flex-grow: 1;
-  height: 550px !important;
+  height: 760px !important;
   background: var(--white);
   border-bottom: 1px solid var(--border);
 }

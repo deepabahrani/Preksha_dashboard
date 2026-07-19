@@ -61,6 +61,8 @@ const CITY_ALIASES = {
   ahemdabad: "Ahmedabad",
   ahmedabad: "Ahmedabad",
   aurangabad: "Chhatrapati Sambhajinagar",
+  barpetaroad: "Barpeta Road",
+  "barpeta road": "Barpeta Road",
   bangalore: "Bengaluru",
   banglore: "Bengaluru",
   bengaluru: "Bengaluru",
@@ -83,17 +85,49 @@ const CITY_ALIASES = {
   navimumbai: "Navi Mumbai",
   "new delhi": "Delhi",
   delhi: "Delhi",
+  "sahib ganj": "Sahibganj",
+  sahibganj: "Sahibganj",
   sardarshahar: "Sardarshahar",
   sardarshahr: "Sardarshahar",
   sardarshar: "Sardarshahar",
   sardrarshaahr: "Sardarshahar",
   shardarshar: "Sardarshahar",
+  surat: "Surat",
+  "surat sadulpur": "Rajgarh, Churu",
+  "thane bhiwandi": "Thane",
+  thane: "Thane",
+  "vasai west": "Vasai West",
   "sri ganganagar": "Sri Ganganagar",
   sriganganagar: "Sri Ganganagar",
-  surat: "Surat",
   walajabad: "Walajabad",
   walajahbad: "Walajabad"
 };
+
+const COUNTRY_ALIASES = {
+  in: "India",
+  ind: "India",
+  indian: "India",
+  india: "India",
+  "india bharat": "India",
+  usa: "United States",
+  us: "United States",
+  "united states of america": "United States",
+  uae: "United Arab Emirates",
+  uk: "United Kingdom",
+  "uk kenya": "United Kingdom / Kenya",
+  espana: "Spain",
+  peru: "Peru"
+};
+
+const INVALID_COUNTRY_KEYS = new Set([
+  "mumbai",
+  "maharashtra",
+  "gujarat",
+  "madhya pradesh",
+  "punjab",
+  "110068",
+  "520002"
+]);
 
 function normalizeLocationKey(value) {
   return normalizeText(value)
@@ -127,6 +161,50 @@ function canonicalizeLocationName(rawValue) {
     .join(", ");
 }
 
+function canonicalizeCountryName(rawValue) {
+  const cleaned = normalizeText(rawValue)
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[()]/g, " ")
+    .replace(/\s*\/\s*/g, " / ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (!cleaned) {
+    return "";
+  }
+
+  const lowerCleaned = cleaned.toLowerCase();
+  if (/^\+?\d[\d\s-]{6,}$/.test(cleaned)) {
+    return "";
+  }
+
+  const normalizedKey = lowerCleaned
+    .replace(/[.-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (INVALID_COUNTRY_KEYS.has(normalizedKey)) {
+    return "";
+  }
+
+  if (COUNTRY_ALIASES[normalizedKey]) {
+    return COUNTRY_ALIASES[normalizedKey];
+  }
+
+  if (cleaned.includes("/")) {
+    return cleaned
+      .split("/")
+      .map((part) => {
+        const normalizedPart = part.trim().toLowerCase();
+        return COUNTRY_ALIASES[normalizedPart] || toTitleCase(part.trim());
+      })
+      .join(" / ");
+  }
+
+  return toTitleCase(cleaned);
+}
+
 function buildUniqueCanonicalCities(cityValues) {
   const uniqueCities = new Map();
 
@@ -140,6 +218,21 @@ function buildUniqueCanonicalCities(cityValues) {
   });
 
   return [...uniqueCities.values()].sort((left, right) => left.localeCompare(right));
+}
+
+function buildUniqueCanonicalCountries(countryValues) {
+  const uniqueCountries = new Map();
+
+  countryValues.forEach((value) => {
+    const canonicalCountry = canonicalizeCountryName(value);
+    if (!canonicalCountry) return;
+
+    const normalizedKey = canonicalCountry.toLowerCase();
+    if (!normalizedKey || uniqueCountries.has(normalizedKey)) return;
+    uniqueCountries.set(normalizedKey, canonicalCountry);
+  });
+
+  return [...uniqueCountries.values()].sort((left, right) => left.localeCompare(right));
 }
 
 function isDuplicateCityName(existingCities, candidateCity) {
@@ -415,7 +508,7 @@ function normalizeUser(row, index) {
     gender: getMappedValue(row, "gender"),
     mobile: getMappedValue(row, "mobile"),
     email: getMappedValue(row, "email"),
-    country: getMappedValue(row, "country"),
+    country: canonicalizeCountryName(getMappedValue(row, "country")),
     city: canonicalizeLocationName(getMappedValue(row, "city")),
     state: getMappedValue(row, "state"),
     address: getMappedValue(row, "address"),
@@ -712,7 +805,7 @@ app.get("/api/cities/validate", async (req, res) => {
 app.get("/api/countries", async (req, res) => {
   try {
     const data = await loadCsvData();
-    const countries = [...new Set(data.users.map((u) => normalizeText(u.country)).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+    const countries = buildUniqueCanonicalCountries(data.users.map((u) => u.country));
     res.json(countries);
   } catch (error) {
     res.status(500).json([]);
