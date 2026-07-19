@@ -110,47 +110,132 @@
               </div>
 
               <div class="select-filter-item">
-                <select id="filterCampsAttended" name="campsAttended">
-                  <option value="all">Number of camps attended ?</option>
-                  <option value="1">1 Camp</option>
-                  <option value="2">2 Camps</option>
-                  <option value="3">3 Camps</option>
-                  <option value="4">4+ Camps</option>
-                </select>
-              </div>
-
-              <div class="select-filter-item">
-                <select id="filterAppPractice" name="appPractice">
-                  <option value="all">Practising via Preksha application ?</option>
-                  <option value="Yes">Yes</option>
-                  <option value="No">No</option>
-                </select>
-              </div>
-
-              <div class="select-filter-item">
-                <input
-                  id="filterCompletedPrograms"
-                  name="completedPrograms"
-                  type="text"
-                  class="filter-text-input"
-                  placeholder="Which programs have you completed?"
-                />
-              </div>
-
-              <div class="select-filter-item">
                 <select id="filterVolunteer" name="volunteer">
                   <option value="all">Volunteer Interest</option>
                   <option value="yes">Yes</option>
                   <option value="no">No</option>
                 </select>
               </div>
-              
-              <div class="select-filter-item">
-                <select id="filterGuidance" name="guidance">
-                  <option value="all">Guidance Status</option>
-                  <option value="yes">Yes</option>
-                  <option value="no">No</option>
+
+              <div class="select-filter-item filter-section-title">
+                <p class="filter-section-heading">Preksha Meditation Details</p>
+              </div>
+
+              <div class="select-filter-item filter-fieldset">
+                <label id="attendedProgramLabel" class="filter-label" for="filterAttendedProgram">
+                  Have you attended any Preksha Meditation camp/workshop/course?
+                </label>
+                <select id="filterAttendedProgram" name="attendedProgram">
+                  <option value="all">Select Attendance</option>
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
                 </select>
+              </div>
+
+              <div class="select-filter-item filter-fieldset conditional-filter hidden-filter-group" id="completedProgramsField">
+                <label class="filter-label" for="filterCompletedPrograms">Which programs have you completed?</label>
+                <div
+                  id="filterCompletedPrograms"
+                  class="multi-select-dropdown"
+                  data-filter-key="completedPrograms"
+                  data-placeholder="Select Program(s)"
+                  data-options='["Introductory session","1-day workshop","2-day workshop","8-day residential camp","Online course","Facilitator training","Trainer training","Other"]'
+                ></div>
+              </div>
+
+              <div class="select-filter-item filter-fieldset">
+                <label id="vahiniMemberLabel" class="filter-label" for="filterIsVahiniMember">Are you a member of Preksha Vahini?</label>
+                <select id="filterIsVahiniMember" name="isVahiniMember">
+                  <option value="all">Select Membership</option>
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                </select>
+              </div>
+
+              <div class="select-filter-item filter-fieldset">
+                <label id="practiceStatusLabel" class="filter-label" for="filterPracticeStatus">Are you currently practicing Preksha Meditation?</label>
+                <select id="filterPracticeStatus" name="practiceStatus">
+                  <option value="all">Select Practice Status</option>
+                  <option value="Yes, regularly">Yes, regularly</option>
+                  <option value="Yes, sometimes">Yes, sometimes</option>
+                  <option value="No">No</option>
+                  <option value="I want to restart">I want to restart</option>
+                </select>
+              </div>
+
+              <div class="select-filter-item filter-fieldset conditional-filter hidden-filter-group" id="practiceDaysField">
+                <label class="filter-label" for="filterPracticeDays">How many days do you usually practice in a month?</label>
+                <select id="filterPracticeDays" name="practiceDays">
+                  <option value="all">Select Days</option>
+                  <option value="1–9 days">1–9 days</option>
+                  <option value="10–19 days">10–19 days</option>
+                  <option value="20–24 days">20–24 days</option>
+                  <option value="25+ days">25+ days</option>
+                </select>
+              </div>
+
+              <div class="select-filter-item filter-fieldset conditional-filter hidden-filter-group" id="practiceDurationField">
+                <label class="filter-label" for="filterPracticeDuration">Average duration on practice days</label>
+                <select id="filterPracticeDuration" name="practiceDuration">
+                  <option value="all">Select Duration</option>
+                  <option value="Less than 10 minutes">Less than 10 minutes</option>
+                  <option value="10–30 minutes">10–30 minutes</option>
+                  <option value="31–60 minutes">31–60 minutes</option>
+                  <option value="1–3 hours">1–3 hours</option>
+                  <option value="3+ hours">3+ hours</option>
+                </select>
+              </div>
+
+              <div class="select-filter-item filter-fieldset conditional-filter hidden-filter-group" id="practiceTypesField">
+                <label class="filter-label" for="filterPracticeTypes">Which Preksha practices do you usually do?</label>
+                <div
+                  id="filterPracticeTypes"
+                  class="multi-select-dropdown"
+                  data-filter-key="practiceTypes"
+                  data-placeholder="Select Practices"
+                  data-options='["Kayotsarg","Sharir Preksha","Mantra Preksha","Samtaal Shvas Preksha","Chaitanya Kendra Preksha","Anupreksha","Dirgh Shvas Preksha","Leshya Dhyan","Asana / Pranayama","Other"]'
+                ></div>
+              </div>
+
+              <div class="select-filter-item filter-fieldset">
+                <label id="usesMeditationAppLabel" class="filter-label" for="filterUsesMeditationApp">Do you practice using the Preksha Meditation App?</label>
+                <select id="filterUsesMeditationApp" name="usesMeditationApp">
+                  <option value="all">Select App Usage</option>
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                </select>
+              </div>
+
+              <div class="select-filter-item filter-fieldset">
+                <label class="filter-label" for="filterNextGoals">What would you like to do next?</label>
+                <div
+                  id="filterNextGoals"
+                  class="multi-select-dropdown"
+                  data-filter-key="nextGoals"
+                  data-placeholder="Select Goals"
+                  data-options='["Restart daily practice","Attend online workshop","Attend residential camp","Become volunteer","Become facilitator","Become trainer","Help organize local sessions"]'
+                ></div>
+              </div>
+
+              <div class="select-filter-item filter-fieldset">
+                <label id="needsGuidanceLabel" class="filter-label" for="filterNeedsGuidance">Would you like to receive guidance from a Preksha trainer/volunteer?</label>
+                <select id="filterNeedsGuidance" name="needsGuidance">
+                  <option value="all">Select Guidance Preference</option>
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                  <option value="Maybe later">Maybe later</option>
+                </select>
+              </div>
+
+              <div class="select-filter-item filter-fieldset">
+                <label class="filter-label" for="filterPreferredModes">Preferred mode for future programs</label>
+                <div
+                  id="filterPreferredModes"
+                  class="multi-select-dropdown"
+                  data-filter-key="preferredModes"
+                  data-placeholder="Select Preferred Mode"
+                  data-options='["Online","Offline in my city","Residential camp","App-based practice"]'
+                ></div>
               </div>
             </form>
           </div>
@@ -171,6 +256,9 @@
                 <option value="fullName-desc">Sort by Name Z-A</option>
                 <option value="registrationDate-desc">Sort by Submit Time</option>
               </select>
+              <button id="resetFilters" type="button" class="button-secondary">
+                Clear Filters
+              </button>
               <button id="exportCsv" type="button" class="button-secondary">
                 Export CSV
               </button>

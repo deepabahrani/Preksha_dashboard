@@ -1,32 +1,41 @@
 // config/csvMapping.js
 module.exports = {
   // Map to the uploaded CSV headers from: data/Preksha users data.csv
-  id: ["id", "ID"],
-  fullName: ["sadhak_name", "Full Name"],
-  registrationDate: ["post_date", "Registration Date", "Submit Time"],
+  id: ["data_id", "id", "ID"],
+  firstName: ["first_name", "First Name"],
+  lastName: ["last_name", "Last Name"],
+  fullName: ["first_name", "sadhak_name", "Full Name"],
+  registrationDate: ["submit_time", "post_date", "Registration Date", "Submit Time"],
   dateOfBirth: ["dob", "Date of Birth"],
   gender: ["gender", "Gender"],
   mobile: ["mobile", "Mobile", "Phone/Mobile"],
   email: ["email", "Email"],
   country: ["country", "Country"],
   city: ["city", "City"],
+  state: ["state", "State"],
+  address: ["address", "Address"],
+  pincode: ["pincode", "Pincode", "PIN Code"],
+  education: ["education", "Education"],
+  profession: ["profession", "Profession"],
+  profilePhoto: ["profile_photo", "profilePhoto", "Profile Photo"],
 
-  // These columns do not exist in the uploaded CSV, so we keep empty arrays
-  // or map to common alternatives if present.
-  languages: ["preferred_language", "Language"],
+  languages: ["knownlanguage", "preferred_language", "Language"],
   experience: ["experience"],
   purpose: ["purpose"],
   referredBy: ["referredBy", "Referred By"],
 
-  // Your current backend logic expects these keys:
-  // - campsAttended: a numeric text
-  // - appPractice: YES/No style
-  // - trainerGuidance: YES/No style
-  // - completedPrograms / pastCampsFilter: free text
-  campsAttended: ["attended_before", "campsAttended", "Number of camps attended ?"],
-  appPractice: ["currently_practicing", "appPractice", "Practising via preksha application ?"],
-  completedPrograms: ["completedPrograms", "Which programs have you completed?"],
-  pastCampsFilter: ["pastCampsFilter", "Past camps - some useful filter"],
-  trainerGuidance: ["attended_before", "trainerGuidance", "Would you like to receive guidance from a Preksha trainer/volunteer?"],
-  supportOffer: ["supportOffer", "Support Offer - USE AI for smart report"]
+  attendedBefore: ["attended_before"],
+  vahiniMember: ["vahini_member"],
+  campsData: ["camps_data"],
+  appPractice: ["uses_app", "appPractice", "Practising via preksha application ?"],
+  currentlyPracticing: ["currently_practicing"],
+  practiceDays: ["practice_days"],
+  practiceDuration: ["practice_duration"],
+  practiceTypes: ["preksha_practices"],
+  completedPrograms: ["completed_program", "completedPrograms", "Which programs have you completed?"],
+  pastCampsFilter: ["camps_data", "pastCampsFilter", "Past camps - some useful filter"],
+  trainerGuidance: ["wants_guidance", "trainerGuidance", "Would you like to receive guidance from a Preksha trainer/volunteer?"],
+  nextAction: ["next_action"],
+  preferredMode: ["preferred_mode"],
+  supportOffer: ["support_offer", "supportOffer", "Support Offer - USE AI for smart report"]
 };

@@ -38,7 +38,15 @@ function resolveDataFile() {
 }
 
 function normalizeText(value) {
-  return String(value ?? "").trim();
+  const normalized = String(value ?? "").trim();
+  if (!normalized) return "";
+
+  const lowered = normalized.toLowerCase();
+  if (lowered === "null" || lowered === "undefined" || normalized === "-") {
+    return "";
+  }
+
+  return normalized;
 }
 
 function toTitleCase(value) {
@@ -210,6 +218,9 @@ function practiceLabel(key) {
 function resolveProfilePhoto(rawPhoto) {
   const fileName = normalizeText(rawPhoto);
   if (!fileName) return "";
+  if (/^https?:\/\//i.test(fileName)) {
+    return fileName;
+  }
   const candidates = [
     path.join(PUBLIC_DIR, "assets", fileName),
     path.join(__dirname, fileName),
@@ -223,24 +234,182 @@ function resolveProfilePhoto(rawPhoto) {
   return "";
 }
 
+function buildFullName(row) {
+  const firstName = getMappedValue(row, "firstName");
+  const lastName = getMappedValue(row, "lastName");
+
+  if (!firstName && !lastName) {
+    return getMappedValue(row, "fullName");
+  }
+
+  if (firstName && lastName) {
+    const normalizedFirst = firstName.toLowerCase();
+    const normalizedLast = lastName.toLowerCase();
+
+    if (normalizedFirst === normalizedLast) {
+      return firstName;
+    }
+
+    if (normalizedFirst.endsWith(` ${normalizedLast}`)) {
+      return firstName;
+    }
+
+    return `${firstName} ${lastName}`;
+  }
+
+  return firstName || lastName;
+}
+
+function countAttendedCamps(rawValue, attendedBefore) {
+  const campsData = normalizeText(rawValue);
+  if (campsData) {
+    const matches = campsData.match(/camp\s*\d+/gi);
+    if (matches && matches.length) {
+      return String(Math.min(matches.length, 4));
+    }
+
+    return "1";
+  }
+
+  return normalizeText(attendedBefore).toLowerCase() === "yes" ? "1" : "";
+}
+
+function parseInterestFlags(rawValue) {
+  const normalized = normalizeText(rawValue).toLowerCase();
+  return {
+    volunteer: normalized.includes("volunteer"),
+    facilitator: normalized.includes("facilitator"),
+    trainer: normalized.includes("trainer")
+  };
+}
+
+function parsePreferenceFlags(rawValue) {
+  const normalized = normalizeText(rawValue).toLowerCase();
+  return {
+    online: normalized.includes("online"),
+    offline: normalized.includes("offline"),
+    residential: normalized.includes("residential"),
+    app: normalized.includes("app")
+  };
+}
+
+function normalizeOptionValue(value) {
+  return normalizeText(value)
+    .toLowerCase()
+    .replace(/[–-]/g, "-")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function extractSelectedOptions(rawValue, options) {
+  const normalizedRaw = normalizeOptionValue(rawValue);
+  if (!normalizedRaw) return [];
+
+  const matched = options.filter((option) => normalizedRaw.includes(normalizeOptionValue(option)));
+  if (matched.length) return matched;
+
+  return ["Other"].filter((option) => options.includes(option));
+}
+
+const PROGRAM_OPTIONS = [
+  "Introductory session",
+  "1-day workshop",
+  "2-day workshop",
+  "8-day residential camp",
+  "Online course",
+  "Facilitator training",
+  "Trainer training",
+  "Other"
+];
+
+const PRACTICE_TYPE_OPTIONS = [
+  "Kayotsarg",
+  "Sharir Preksha",
+  "Mantra Preksha",
+  "Samtaal Shvas Preksha",
+  "Chaitanya Kendra Preksha",
+  "Anupreksha",
+  "Dirgh Shvas Preksha",
+  "Leshya Dhyan",
+  "Asana / Pranayama",
+  "Other"
+];
+
+const NEXT_GOAL_OPTIONS = [
+  "Restart daily practice",
+  "Attend online workshop",
+  "Attend residential camp",
+  "Become volunteer",
+  "Become facilitator",
+  "Become trainer",
+  "Help organize local sessions"
+];
+
+const PREFERRED_MODE_OPTIONS = [
+  "Online",
+  "Offline in my city",
+  "Residential camp",
+  "App-based practice"
+];
+
+function normalizePracticeDuration(rawValue) {
+  const normalized = normalizeOptionValue(rawValue);
+  if (!normalized) return "";
+  if (normalized.includes("less than 10")) return "Less than 10 minutes";
+  if (normalized.includes("10 - 30") || normalized.includes("10-30")) return "10–30 minutes";
+  if (normalized.includes("31 - 60") || normalized.includes("31-60")) return "31–60 minutes";
+  if (normalized.includes("1 - 3") || normalized.includes("1-3")) return "1–3 hours";
+  if (normalized.includes("3+")) return "3+ hours";
+  return normalizeText(rawValue);
+}
+
+function normalizePracticeDays(rawValue) {
+  const normalized = normalizeOptionValue(rawValue);
+  if (!normalized) return "";
+  if (normalized.includes("1-9")) return "1–9 days";
+  if (normalized.includes("10-19")) return "10–19 days";
+  if (normalized.includes("20-24")) return "20–24 days";
+  if (normalized.includes("25+")) return "25+ days";
+  return normalizeText(rawValue);
+}
+
+function practiceStatusLabel(key) {
+  return {
+    regularly: "Yes, regularly",
+    sometimes: "Yes, sometimes",
+    no: "No",
+    restart: "I want to restart",
+    unknown: ""
+  }[key] || "";
+}
+
 function normalizeUser(row, index) {
-  const fullName = getMappedValue(row, "fullName");
+  const fullName = buildFullName(row);
   const guidanceText = normalizeText(getMappedValue(row, "trainerGuidance")).toLowerCase();
-  
-  // Directly targeting required properties from the spreadsheet dataset
-  const attendedBefore = normalizeText(getMappedValue(row, "attended_before")).toLowerCase();
-  const currentlyPracticing = normalizeText(getMappedValue(row, "currently_practicing"));
+  const attendedBefore = normalizeText(getMappedValue(row, "attendedBefore")).toLowerCase();
+  const currentlyPracticing = normalizeText(getMappedValue(row, "currentlyPracticing"));
+  const vahiniMember = getMappedValue(row, "vahiniMember");
+  const practiceDays = normalizePracticeDays(getMappedValue(row, "practiceDays"));
+  const practiceDuration = normalizePracticeDuration(getMappedValue(row, "practiceDuration"));
+  const completedPrograms = extractSelectedOptions(getMappedValue(row, "completedPrograms"), PROGRAM_OPTIONS);
+  const practiceTypes = extractSelectedOptions(getMappedValue(row, "practiceTypes"), PRACTICE_TYPE_OPTIONS);
+  const nextAction = getMappedValue(row, "nextAction");
+  const preferredMode = getMappedValue(row, "preferredMode");
+  const nextGoals = extractSelectedOptions(nextAction, NEXT_GOAL_OPTIONS);
+  const preferredModes = extractSelectedOptions(preferredMode, PREFERRED_MODE_OPTIONS);
+  const interests = parseInterestFlags(nextAction);
+  const preferences = parsePreferenceFlags(preferredMode);
   const practiceKey = parsePracticeStatus(currentlyPracticing);
-  
   const firstTimeAttendee = attendedBefore === "no";
   const activePractitioner = practiceKey === "regularly" || practiceKey === "sometimes";
-
-  const becomeVolunteer = guidanceText === "yes";
+  const campsAttended = countAttendedCamps(getMappedValue(row, "campsData"), attendedBefore);
+  const becomeVolunteer = interests.volunteer;
   const needGuidance = guidanceText === "yes";
 
   return {
     id: getMappedValue(row, "id") || String(index + 1),
     fullName,
+    registrationDate: getMappedValue(row, "registrationDate"),
     dateOfBirth: getMappedValue(row, "dateOfBirth"),
     age: calculateAge(getMappedValue(row, "dateOfBirth")),
     gender: getMappedValue(row, "gender"),
@@ -258,19 +427,39 @@ function normalizeUser(row, index) {
     profilePhotoName: getMappedValue(row, "profilePhoto"),
     
     practiceKey,
+    attendedProgram: attendedBefore === "yes" ? "Yes" : attendedBefore === "no" ? "No" : "",
+    isVahiniMember: vahiniMember,
+    practiceStatus: practiceStatusLabel(practiceKey),
+    practiceDays,
+    practiceDuration,
+    practiceTypes,
+    usesMeditationApp: getMappedValue(row, "appPractice"),
+    nextGoals,
+    needsGuidance: getMappedValue(row, "trainerGuidance"),
+    preferredModes,
     becomeVolunteer,
     needGuidance,
+    facilitatorInterested: interests.facilitator,
+    trainerInterested: interests.trainer,
     firstTimeAttendee,
     activePractitioner,
     seekerType: firstTimeAttendee ? "First Time Attendee" : "Existing Practitioner",
     meditationStatus: practiceLabel(practiceKey),
     initials: fullName.split(" ").filter(Boolean).map(n => n[0]).join("").toUpperCase() || "P",
-    
-    campsAttended: getMappedValue(row, "campsAttended"),
+
+    campsAttended,
     appPractice: getMappedValue(row, "appPractice"),
-    completedPrograms: getMappedValue(row, "completedPrograms"),
+    completedPrograms,
+    completedProgramsText: completedPrograms.join(", "),
     pastCampsFilter: getMappedValue(row, "pastCampsFilter"),
-    trainerGuidance: getMappedValue(row, "trainerGuidance")
+    trainerGuidance: getMappedValue(row, "trainerGuidance"),
+    nextAction,
+    preferredMode,
+    supportOffer: getMappedValue(row, "supportOffer"),
+    preferenceOnline: preferences.online,
+    preferenceOffline: preferences.offline,
+    preferenceResidential: preferences.residential,
+    preferenceApp: preferences.app
   };
 }
 
@@ -328,7 +517,12 @@ function generateAnalytics(users) {
     if (user.firstTimeAttendee) firstTime += 1;
     else existing += 1;
     if (user.becomeVolunteer === true) volunteer += 1;
-    if (user.activePractitioner) prefApp += 1;
+    if (user.facilitatorInterested === true) facilitator += 1;
+    if (user.trainerInterested === true) trainer += 1;
+    if (user.preferenceOnline === true) prefOnline += 1;
+    if (user.preferenceOffline === true) prefOffline += 1;
+    if (user.preferenceResidential === true) prefResidential += 1;
+    if (user.preferenceApp === true) prefApp += 1;
   });
 
   return {
@@ -398,6 +592,13 @@ function matchesQuery(user, query) {
     return normalizeText(user[field]).toLowerCase().includes(normalizeText(value).toLowerCase());
   };
 
+  const multiValueMatch = (field, value) => {
+    if (!value || value === "all") return true;
+    const selectedValues = Array.isArray(value) ? value : [value];
+    const userValues = Array.isArray(user[field]) ? user[field].map((item) => normalizeText(item).toLowerCase()) : [];
+    return selectedValues.every((selectedValue) => userValues.includes(normalizeText(selectedValue).toLowerCase()));
+  };
+
   const booleanMatch = (field, value) => {
     if (!value || value === "all") return true;
     const normalized = value.toLowerCase();
@@ -416,9 +617,20 @@ function matchesQuery(user, query) {
     exactMatch("gender", query.gender) &&
     cityMatch &&
     exactMatch("country", query.country) &&
+    exactMatch("attendedProgram", query.attendedProgram) &&
+    multiValueMatch("completedPrograms", query.completedPrograms) &&
+    exactMatch("isVahiniMember", query.isVahiniMember) &&
+    exactMatch("practiceStatus", query.practiceStatus) &&
+    exactMatch("practiceDays", query.practiceDays) &&
+    exactMatch("practiceDuration", query.practiceDuration) &&
+    multiValueMatch("practiceTypes", query.practiceTypes) &&
+    exactMatch("usesMeditationApp", query.usesMeditationApp) &&
+    multiValueMatch("nextGoals", query.nextGoals) &&
+    exactMatch("needsGuidance", query.needsGuidance) &&
+    multiValueMatch("preferredModes", query.preferredModes) &&
     exactMatch("campsAttended", query.campsAttended) &&
     exactMatch("appPractice", query.appPractice) &&
-    partialMatch("completedPrograms", query.completedPrograms) &&
+    partialMatch("completedProgramsText", query.completedProgramsText) &&
     booleanMatch("becomeVolunteer", query.volunteer) &&
     booleanMatch("needGuidance", query.guidance)
   );
